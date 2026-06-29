@@ -343,6 +343,9 @@ if [[ "$DO_SQL_BOOTSTRAP" == "1" ]]; then
     sed -e "s|@@EMBED_URL@@|${EMBED_URL}|g" \
         -e "s|@@AI_ACCOUNT_URL@@|${AI_ACCOUNT_URL}|g" \
         "${ROOT_DIR}/sql/04_search_proc.sql" > "${GEN_DIR}/04_search_proc.sql"
+    sed -e "s|@@EMBED_URL@@|${EMBED_URL}|g" \
+        -e "s|@@AI_ACCOUNT_URL@@|${AI_ACCOUNT_URL}|g" \
+        "${ROOT_DIR}/sql/05_external_model.sql" > "${GEN_DIR}/05_external_model.sql"
     chmod 600 "${GEN_DIR}"/*.sql
 
     SQLCMD=("$SQLCMD_BIN" -S "tcp:${SQL_SERVER}.database.windows.net,1433" -d "$SQL_DB"
@@ -351,6 +354,7 @@ if [[ "$DO_SQL_BOOTSTRAP" == "1" ]]; then
     log "Applying 02_seed_faq.sql ..."         ; "${SQLCMD[@]}" -i "${ROOT_DIR}/sql/02_seed_faq.sql"
     log "Applying 04_search_proc.sql ..."      ; "${SQLCMD[@]}" -i "${GEN_DIR}/04_search_proc.sql"
     log "Generating embeddings (calls Azure OpenAI) ..." ; "${SQLCMD[@]}" -i "${GEN_DIR}/03_generate_embeddings.sql"
+    log "Registering external model (Exercise 2) ..."     ; "${SQLCMD[@]}" -i "${GEN_DIR}/05_external_model.sql"
     ok "SQL bootstrap complete (FAQ_Content, FAQ_Embeddings, dbo.SearchFAQ ready)."
   fi
 fi
