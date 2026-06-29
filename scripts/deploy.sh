@@ -47,6 +47,10 @@ EMBED_MODEL="text-embedding-3-small"; EMBED_MODEL_VERSION="1"
 API_VERSION="2024-10-21"
 FABRIC_SKU="F2"
 
+# Password protecting the database master key (used to encrypt the DB-scoped
+# credential that lets Azure SQL call Azure OpenAI with its managed identity).
+MASTER_KEY_PWD="Aa1!MK_$(openssl rand -hex 10 2>/dev/null || echo fallbackMK12345)"
+
 # ----- arg parsing ---------------------------------------------------------
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -178,8 +182,9 @@ ok "VNet/${SUBNET} created and NSG ${NSG} attached (all inbound+outbound = Allow
 hr; log "3/6  Azure SQL Hyperscale"; hr
 az sql server create -g "$RG" -n "$SQL_SERVER" -l "$LOCATION" \
   --admin-user "$SQL_ADMIN" --admin-password "$SQL_PASSWORD" \
+  --assign-identity --identity-type SystemAssigned \
   --enable-public-network true -o none
-ok "SQL server ${SQL_SERVER} created."
+ok "SQL server ${SQL_SERVER} created (with system-assigned managed identity)."
 
 # Allow all Azure services + (lab) all client IPs.
 az sql server firewall-rule create -g "$RG" -s "$SQL_SERVER" \
@@ -231,9 +236,26 @@ fi
 AI_ENDPOINT=$(az cognitiveservices account show -g "$RG" -n "$AIF" \
   --query properties.endpoint -o tsv)
 AI_KEY=$(az cognitiveservices account keys list -g "$RG" -n "$AIF" \
-  --query key1 -o tsv)
+  --query key1 -o tsv 2>/dev/null || echo "")
+# Base account URL (no trailing slash) - used as the DB-scoped credential name.
+AI_ACCOUNT_URL="${AI_ENDPOINT%/}"
 EMBED_URL="${AI_ENDPOINT}openai/deployments/${EMBED_MODEL}/embeddings?api-version=${API_VERSION}"
 CHAT_URL="${AI_ENDPOINT}openai/deployments/${CHAT_MODEL}/chat/completions?api-version=${API_VERSION}"
+
+# Grant the SQL server's managed identity token access to Azure OpenAI so it can
+# call the embeddings endpoint without an api-key (Entra token auth).
+SQL_MI_PRINCIPAL=$(az sql server show -g "$RG" -n "$SQL_SERVER" \
+  --query identity.principalId -o tsv 2>/dev/null || echo "")
+AIF_ID=$(az cognitiveservices account show -g "$RG" -n "$AIF" --query id -o tsv)
+if [[ -n "$SQL_MI_PRINCIPAL" ]]; then
+  az role assignment create \
+    --assignee-object-id "$SQL_MI_PRINCIPAL" --assignee-principal-type ServicePrincipal \
+    --role "Cognitive Services OpenAI User" --scope "$AIF_ID" -o none 2>/dev/null \
+    && ok "Granted SQL managed identity 'Cognitive Services OpenAI User' on ${AIF}." \
+    || warn "Role assignment for SQL managed identity may already exist."
+else
+  warn "Could not resolve SQL server managed identity principalId; embeddings may fail."
+fi
 
 # ===========================================================================
 # 5. Microsoft Fabric capacity (optional)
@@ -313,12 +335,13 @@ if [[ "$DO_SQL_BOOTSTRAP" == "1" ]]; then
     ok "Using portable sqlcmd: ${SQLCMD_BIN}"
   fi
   if true; then
-    # Render templated SQL with the live endpoint/key/deployment.
+    # Render templated SQL with the live endpoint + managed-identity settings.
     sed -e "s|@@EMBED_URL@@|${EMBED_URL}|g" \
-        -e "s|@@AI_KEY@@|${AI_KEY}|g" \
+        -e "s|@@AI_ACCOUNT_URL@@|${AI_ACCOUNT_URL}|g" \
+        -e "s|@@MASTER_KEY_PWD@@|${MASTER_KEY_PWD}|g" \
         "${ROOT_DIR}/sql/03_generate_embeddings.sql" > "${GEN_DIR}/03_generate_embeddings.sql"
     sed -e "s|@@EMBED_URL@@|${EMBED_URL}|g" \
-        -e "s|@@AI_KEY@@|${AI_KEY}|g" \
+        -e "s|@@AI_ACCOUNT_URL@@|${AI_ACCOUNT_URL}|g" \
         "${ROOT_DIR}/sql/04_search_proc.sql" > "${GEN_DIR}/04_search_proc.sql"
     chmod 600 "${GEN_DIR}"/*.sql
 

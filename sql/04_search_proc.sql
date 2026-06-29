@@ -13,7 +13,9 @@
        INSERT INTO #searchResults (faq_id, category, question, answer)
        EXEC dbo.SearchFAQ @user_question = @user_question;
 
-   Placeholders @@EMBED_URL@@ / @@AI_KEY@@ are substituted by deploy.sh.
+   Placeholders @@EMBED_URL@@ / @@AI_ACCOUNT_URL@@ are substituted by deploy.sh.
+   Authentication uses the SQL server's MANAGED IDENTITY (token, no api-key) via
+   the DATABASE SCOPED CREDENTIAL created in 03_generate_embeddings.sql.
 
    Note on VECTOR_DISTANCE: the metric ('cosine') is the FIRST argument,
    followed by the two vectors (Exercise 2 highlights this ordering).
@@ -27,18 +29,17 @@ BEGIN
 
     DECLARE @payload  NVARCHAR(MAX),
             @response NVARCHAR(MAX),
-            @qvec     VECTOR(1536),
-            @headers  NVARCHAR(MAX) = N'{"api-key": "@@AI_KEY@@"}';
+            @qvec     VECTOR(1536);
 
     -- 1) Embed the incoming question with Azure OpenAI.
     SET @payload = N'{"input":"' + STRING_ESCAPE(@user_question, 'json') + N'"}';
 
     EXEC sp_invoke_external_rest_endpoint
-        @method   = 'POST',
-        @url      = N'@@EMBED_URL@@',
-        @headers  = @headers,
-        @payload  = @payload,
-        @response = @response OUTPUT;
+        @method     = 'POST',
+        @url        = N'@@EMBED_URL@@',
+        @credential = [@@AI_ACCOUNT_URL@@],
+        @payload    = @payload,
+        @response   = @response OUTPUT;
 
     SET @qvec = CAST(JSON_QUERY(@response, '$.result.data[0].embedding') AS VECTOR(1536));
 
