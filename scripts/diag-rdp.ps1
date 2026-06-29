@@ -1,0 +1,10 @@
+$d = (Get-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections).fDenyTSConnections
+'fDenyTSConnections=' + $d
+$t = (Get-Service TermService).Status
+'TermService=' + $t
+$nla = (Get-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name UserAuthentication).UserAuthentication
+'NLA=' + $nla
+$fw = (Get-NetFirewallRule -DisplayGroup 'Remote Desktop' | Where-Object Enabled -eq 'True').Count
+'RDP-FW-rules-enabled=' + $fw
+$lst = (Get-NetTCPConnection -LocalPort 3389 -State Listen -ErrorAction SilentlyContinue).Count
+'Listening3389=' + $lst
