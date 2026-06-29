@@ -22,6 +22,24 @@
 
 ---
 
+## 1a. Exercise status summary — Exercise-00 → Exercise-02 ✅ PASSED
+
+All three confirmed with real evidence on `lab513vm` / `faq-ai-assistant-db` (2026-06-29). Not assumed — each has a verified artifact or query output.
+
+| Exercise | Title | Status | Evidence | Detail |
+|---|---|---|---|---|
+| **00** | Environment readiness (Task 6 acceptance checks) | ✅ **PASSED** | `C:\LabFiles\sql_mcp_server` staged (`srv=True, req=True`); SQL Hyperscale + FAQ tables + `dbo.SearchFAQ` confirmed; Foundry `FAQ-Assistant-project` opens | §10.1 |
+| **01** | Database + embeddings + semantic search proc | ✅ **PASSED** | `dbo.FAQ_Content` (14 rows), `dbo.FAQ_Embeddings` `VECTOR(1536)` (14/14 populated via Managed-Identity token), `dbo.SearchFAQ` created + returns ranked rows | §3, §10.1 |
+| **02** | GitHub Copilot semantic-search query | ✅ **PASSED** | Fixed Msg 15151 via `CREATE EXTERNAL MODEL` (token/MI); `AI_GENERATE_EMBEDDINGS` + `VECTOR_DISTANCE` query returned 3 correct rows (`faq_id 5/6/7`, Returns) | §10.2 |
+
+**Auth posture across all three:** token / **Managed Identity** only — no api-key anywhere (AI account has `disableLocalAuth=true`). Pattern verified against Microsoft Learn.
+
+**Repo:** `sql/05_external_model.sql` + `deploy.sh` wiring committed (`546e267`); this report (`df3e2a1`) on `master` of `ibranibeny/envlab513`.
+
+> Still interactive / browser-only (not yet run): Exercise 3 (RAG), Exercise 4 (MCP tool + Foundry agent), Exercise 5 (Fabric), Exercise 6 — see §9.
+
+---
+
 ## 2. Region availability — honest mapping
 
 Verified against Microsoft Learn region/product availability (June 2026).
