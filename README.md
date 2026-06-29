@@ -17,6 +17,44 @@ Reference: [microsoft/Build26-LAB513 · exercise-00.md](https://github.com/micro
 | `labfiles/sql-mcp-lab/` | DAB config + VS Code MCP wiring → staged to `C:\LabFiles` |
 | `REPORT.md` | Honest as-built report (regions, security, cost) |
 
+## Prerequisites
+
+Before you run anything, make sure the host (lab VM or your machine) has:
+
+| Requirement | How to get / verify | Why |
+|---|---|---|
+| **Git on PowerShell** | Install from [git-scm.com](https://git-scm.com/download/win), then in PowerShell run `git --version`. If not found, add it to PATH for the session: `$env:Path += ';C:\Program Files\Git\cmd'` | Clone this repo and commit lab work |
+| **Azure CLI + device-code login** | Install Azure CLI, then sign in with **device code** (no browser popup needed): `az login --use-device-code` — open the shown URL, enter the code, pick the account `bibrani@MngEnvMCAP708029.onmicrosoft.com` | `deploy.sh` / `teardown.sh` provision Azure resources |
+| **Azure subscription with Contributor** | `az account set --subscription "ME-MngEnvMCAP708029-benyibrani-1"` then `az account show` | Create RG, SQL, AI Foundry, Fabric |
+| **GitHub Enterprise + Copilot** | A GitHub account enrolled in your org's **GitHub Enterprise** with **Copilot** enabled; sign in inside VS Code (Accounts → Sign in) | Exercise 2 uses GitHub Copilot to write the semantic-search query |
+| **VS Code + extensions** | VS Code with the **GitHub Copilot**, **SQL Server (mssql)**, and **Azure** extensions | Authoring + running SQL / Copilot prompts |
+
+> Device-code tip: if `az login` can't open a browser on the VM, always use `az login --use-device-code` and complete the code on any machine.
+
+## What gets installed / provisioned
+
+**Installed on the lab VM** by `scripts/install-tools.ps1` (via `create-vm.ps1`):
+
+| Tool | Version target | Purpose |
+|---|---|---|
+| Visual Studio Code | latest | Editor + Copilot + MCP |
+| Azure CLI | latest | Provision + manage Azure |
+| Git | latest | Clone repo, commit work |
+| Python | 3.12 | MCP server (`server.py`) |
+| devtunnel | latest | Expose local MCP endpoint (Exercise 4) |
+| .NET SDK | latest | DAB (Data API Builder) |
+
+**Provisioned in Azure** by `scripts/deploy.sh`:
+
+| Service | SKU / detail | Region |
+|---|---|---|
+| Resource group + VNet / Subnet / NSG | lab networking | `indonesiacentral` |
+| Azure SQL logical server + **Hyperscale** DB | Serverless, Gen5 2 vCore, system-assigned Managed Identity | `indonesiacentral` |
+| **Azure AI Foundry** + `gpt-4o` + `text-embedding-3-small` + `FAQ-Assistant-project` | token-only auth (`disableLocalAuth=true`) | `southeastasia`/`eastus2` (Azure OpenAI not in Indonesia Central) |
+| Microsoft Fabric capacity | F2 (skippable with `--no-fabric`) | `indonesiacentral` (fallback `southeastasia`) |
+
+> Cost note: the **Fabric F2 capacity bills continuously** — run `deploy.sh --no-fabric` or `teardown.sh` when not using Exercise 5.
+
 ## Quick start on the lab VM
 
 ```powershell
