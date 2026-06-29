@@ -1,0 +1,2 @@
+$r=az vm run-command invoke -g rg-lab513-vm -n lab513vm --command-id RunPowerShellScript --scripts "New-Item -ItemType Directory -Force C:\Tools|Out-Null; iwr 'https://aka.ms/TunnelsCliDownload/win-x64' -OutFile C:\Tools\devtunnel.exe; \$m=[Environment]::GetEnvironmentVariable('Path','Machine'); if(\$m -notlike '*C:\Tools*'){[Environment]::SetEnvironmentVariable('Path','C:\Tools;'+\$m,'Machine')}; 'dt='+(Test-Path 'C:\Tools\devtunnel.exe')" -o json | ConvertFrom-Json
+$r.value[0].message

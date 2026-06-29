@@ -1,5 +1,10 @@
 # lab513 environment — never commit credentials
 .vm-cred
+.env
 .generated/
 *.cred
 *.secret
+# local diagnostic scripts with hardcoded SQL password
+scripts/load-on-vm.ps1
+scripts/verify-objects.ps1
+scripts/verify-on-vm.ps1

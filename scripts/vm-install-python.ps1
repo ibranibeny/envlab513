@@ -1,0 +1,2 @@
+$r=az vm run-command invoke -g rg-lab513-vm -n lab513vm --command-id RunPowerShellScript --scripts "if(-not(Get-Command python -EA SilentlyContinue)){iwr 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe' -OutFile \$env:TEMP\py.exe; Start-Process \$env:TEMP\py.exe -ArgumentList '/quiet','InstallAllUsers=1','PrependPath=1','Include_pip=1' -Wait}; (Test-Path 'C:\Program Files\Python312\python.exe')" -o json | ConvertFrom-Json
+"python installed: " + $r.value[0].message

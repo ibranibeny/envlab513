@@ -1,0 +1,2 @@
+$r=az vm run-command invoke -g rg-lab513-vm -n lab513vm --command-id RunPowerShellScript --scripts "if(-not(Get-Command git -EA SilentlyContinue)){iwr 'https://github.com/git-for-windows/git/releases/download/v2.47.0.windows.1/Git-2.47.0-64-bit.exe' -OutFile \$env:TEMP\git.exe; Start-Process \$env:TEMP\git.exe -ArgumentList '/VERYSILENT','/NORESTART','/MERGETASKS=!runcode' -Wait}; [Environment]::GetEnvironmentVariable('Path','Machine')|Out-Null; (Test-Path 'C:\Program Files\Git\cmd\git.exe')" -o json | ConvertFrom-Json
+"git installed: " + $r.value[0].message

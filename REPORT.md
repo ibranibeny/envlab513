@@ -272,3 +272,15 @@ Built a standard lab VM directly in **Indonesia Central** via `scripts/create-vm
 **GitHub:** environment pushed to **https://github.com/ibranibeny/envlab513** (private). `.vm-cred` excluded by `lab513/.gitignore`.
 
 > Honesty note: `microsoft/Build26-LAB513` exercise-00.md returned 404 (repo private/unavailable), so exercise-00 was simulated as environment setup against the local lab513 toolchain, not fetched verbatim.
+
+### 10.1 Task 6 environment-readiness checks — VERIFIED 2026-06-29
+
+All three Exercise-00 / Task-6 acceptance checks confirmed on `lab513vm` via `az vm run-command`:
+
+| Check | Status | Evidence |
+|---|---|---|
+| `C:\LabFiles\sql_mcp_server` exists with `requirements.txt` and `server.py` | ✅ | staged via base64 (git unavailable on VM): `srv=True; req=True`; DAB `dab=True; mcp=True` |
+| Azure SQL Hyperscale available with FAQ tables and `dbo.SearchFAQ` | ✅ | `dbo.FAQ_Content` (14 rows), `dbo.FAQ_Embeddings`, `dbo.SearchFAQ` confirmed in SSMS |
+| Microsoft Foundry opens `FAQ-Assistant-project` | ✅ | project created under `aif-lab513-2139d8` (eastus2) via REST PUT |
+
+> VM tooling status: `dotnet=True`; `git/code/python/pip/devtunnel=False` (LabFiles staged by file-copy, not git clone). `deploy.sh` Foundry project step rewritten to `az rest --body @file` (the `az resource create` form failed).

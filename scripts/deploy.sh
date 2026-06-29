@@ -216,6 +216,18 @@ az cognitiveservices account deployment create -g "$RG" -n "$AIF" \
   --model-format OpenAI --sku-name Standard --sku-capacity 50 -o none
 ok "Deployed embedding model ${EMBED_MODEL}."
 
+# Foundry project the lab refers to (Exercise 4): FAQ-Assistant-project
+FOUNDRY_PROJECT="FAQ-Assistant-project"
+mkdir -p "$GEN_DIR"; chmod 700 "$GEN_DIR"
+printf '{"location":"%s","identity":{"type":"SystemAssigned"},"properties":{}}' "$AI_LOCATION" > "${GEN_DIR}/project.json"
+PROJ_URL="https://management.azure.com/subscriptions/${CURRENT_SUB_ID}/resourceGroups/${RG}/providers/Microsoft.CognitiveServices/accounts/${AIF}/projects/${FOUNDRY_PROJECT}?api-version=2025-04-01-preview"
+if az rest --method put --url "$PROJ_URL" --headers Content-Type=application/json \
+     --body "@${GEN_DIR}/project.json" -o none 2>/dev/null; then
+  ok "Foundry project ${FOUNDRY_PROJECT} created."
+else
+  warn "Could not create Foundry project ${FOUNDRY_PROJECT} via CLI; create it at https://ai.azure.com/"
+fi
+
 AI_ENDPOINT=$(az cognitiveservices account show -g "$RG" -n "$AIF" \
   --query properties.endpoint -o tsv)
 AI_KEY=$(az cognitiveservices account keys list -g "$RG" -n "$AIF" \

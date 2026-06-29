@@ -1,0 +1,2 @@
+$r=az vm run-command invoke -g rg-lab513-vm -n lab513vm --command-id RunPowerShellScript --scripts "'git='+(Test-Path 'C:\Program Files\Git\cmd\git.exe')+'; py='+(Test-Path 'C:\Program Files\Python312\python.exe')+'; dt='+(Test-Path 'C:\Tools\devtunnel.exe')+'; code='+(Test-Path 'C:\Program Files\Microsoft VS Code\Code.exe')+'; az='+(Test-Path 'C:\Program Files\Microsoft SDKs\Azure\CLI2\python.exe')+'; srv='+(Test-Path C:\LabFiles\sql_mcp_server\server.py)" -o json | ConvertFrom-Json
+$r.value[0].message
