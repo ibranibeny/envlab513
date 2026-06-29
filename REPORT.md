@@ -248,3 +248,27 @@ These are portal/interactive steps the CLI cannot do for you:
 - **Exercise 5** — Fabric workspace `Workspace{id}`, mirrored DB (mirror **only** `dbo.FAQ_Content`), semantic model `FAQ_Content` (Direct Lake on SQL), report `FAQ_rpt`, lineage.
 
 See `TASKS.md` for the exact click-path of each.
+
+---
+
+## 10. Standard lab VM (Indonesia Central) + Exercise-00 simulation — 2026-06-29
+
+Built a standard lab VM directly in **Indonesia Central** via `scripts/create-vm.ps1` (run from WSL through Windows `az` interop, since GSA blocks WSL-native az).
+
+| Property | Value |
+|---|---|
+| VM | `lab513vm` (Windows Server 2022 Datacenter, `Standard_D2s_v5`) |
+| RG / Region | `rg-lab513-vm` / `indonesiacentral` |
+| Public IP | `70.153.151.204` |
+| FQDN | `lab513vmtcs7g.indonesiacentral.cloudapp.azure.com` |
+| RDP (3389) | open via `--nsg-rule RDP` |
+| Admin user | `labadmin` (password saved to `lab513/.vm-cred`, **gitignored**) |
+
+**Requirements — all met:**
+1. RDP 3389 ✅  2. Public IP ✅  3. VS Code **1.126.0** ✅  4. Azure CLI **2.87.0** ✅ (installed via run-command, file-based to preserve quoting).
+
+**Exercise-00 (environment readiness) simulated on the VM** — VS Code + az CLI verified; sign in later with `az login` using your account. Tools installed by `scripts/install-tools.ps1`.
+
+**GitHub:** environment pushed to **https://github.com/ibranibeny/envlab513** (private). `.vm-cred` excluded by `lab513/.gitignore`.
+
+> Honesty note: `microsoft/Build26-LAB513` exercise-00.md returned 404 (repo private/unavailable), so exercise-00 was simulated as environment setup against the local lab513 toolchain, not fetched verbatim.
