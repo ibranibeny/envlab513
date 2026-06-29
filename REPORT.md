@@ -243,7 +243,7 @@ During setup, from your **WSL** shell:
 ## 9. What still has to be done in a browser (cannot be scripted)
 
 These are portal/interactive steps the CLI cannot do for you:
-- **Exercise 2** — GitHub Copilot sign-in and prompting in VS Code.
+- **Exercise 2** — GitHub Copilot sign-in and prompting in VS Code. *(Copilot's semantic-search query verified end-to-end — see §10.2; external model fix committed.)*
 - **Exercise 4** — `devtunnel` host + creating the **MCP tool** and **`faq-orchestrator-agent`** in Foundry (`https://ai.azure.com`, project `FAQ-Assistant-project`).
 - **Exercise 5** — Fabric workspace `Workspace{id}`, mirrored DB (mirror **only** `dbo.FAQ_Content`), semantic model `FAQ_Content` (Direct Lake on SQL), report `FAQ_rpt`, lineage.
 
@@ -284,3 +284,41 @@ All three Exercise-00 / Task-6 acceptance checks confirmed on `lab513vm` via `az
 | Microsoft Foundry opens `FAQ-Assistant-project` | ✅ | project created under `aif-lab513-2139d8` (eastus2) via REST PUT |
 
 > VM tooling status: `dotnet=True`; `git/code/python/pip/devtunnel=False` (LabFiles staged by file-copy, not git clone). `deploy.sh` Foundry project step rewritten to `az rest --body @file` (the `az resource create` form failed).
+
+### 10.2 Exercise 2 (Copilot semantic search) — PASSED 2026-06-29
+
+GitHub Copilot's suggested query for Exercise 2 Task 2 used the modern
+`AI_GENERATE_EMBEDDINGS(@q USE MODEL [text-embedding-3-small])` syntax, which
+first failed with **Msg 15151 — "Cannot find the external model
+'text-embedding-3-small'"** (no external model object existed, and the generated
+query referenced a non-existent column `e.Embedding`).
+
+**Fix applied (token / Managed Identity, no api-key):**
+- Registered the embedding deployment as a named object via `CREATE EXTERNAL MODEL [text-embedding-3-small]` (`API_FORMAT='Azure OpenAI'`, `MODEL_TYPE=EMBEDDINGS`), reusing the existing Managed-Identity **DATABASE SCOPED CREDENTIAL** from `03_generate_embeddings.sql` — see [sql/05_external_model.sql](sql/05_external_model.sql).
+- Corrected the query to the real column name `e.question_embedding`.
+- Wired `deploy.sh` to render + apply `05_external_model.sql` immediately after the embeddings step (DSC must exist first).
+
+**Verified on `faq-ai-assistant-db` (real run, not assumed):**
+
+```sql
+DECLARE @q  NVARCHAR(MAX) = N'My product arrived damaged';
+DECLARE @qv VECTOR(1536)  = AI_GENERATE_EMBEDDINGS(@q USE MODEL [text-embedding-3-small]);
+SELECT TOP(3) c.faq_id, c.category, c.question, c.answer
+FROM dbo.FAQ_Content c
+JOIN dbo.FAQ_Embeddings e ON e.faq_id = c.faq_id
+ORDER BY VECTOR_DISTANCE('cosine', @qv, e.question_embedding) ASC;
+```
+
+| faq_id | category | question | Status |
+|---|---|---|---|
+| 5 | Returns | How do I return a damaged item? | ✅ top match |
+| 6 | Returns | What if I received the wrong item? | ✅ |
+| 7 | Returns | What is your return policy? | ✅ |
+
+`ROWS 3` returned — all three top results are semantically correct (damaged-item / returns).
+
+**Authority:** pattern confirmed against Microsoft Learn (*Use SQL database in AI applications*) — `CREATE EXTERNAL MODEL` + Managed-Identity DSC (`SECRET = '{"resourceid":"https://cognitiveservices.azure.com"}'`) + `AI_GENERATE_EMBEDDINGS` + `VECTOR_DISTANCE` is the official, key-free approach.
+
+**Repo:** committed as `546e267` on `master` (`sql/05_external_model.sql` + `deploy.sh` wiring).
+
+> Note: `faq_id` values (5/6/7) differ from the lab screenshot (2/15/11) only because the seed insert order differs; the matched questions are identical in meaning.
