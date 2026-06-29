@@ -285,12 +285,22 @@ ok "Outputs written to ${ENV_FILE} (chmod 600)."
 # ===========================================================================
 if [[ "$DO_SQL_BOOTSTRAP" == "1" ]]; then
   hr; log "SQL bootstrap"; hr
-  if ! command -v sqlcmd >/dev/null 2>&1; then
-    warn "'sqlcmd' not found - skipping automatic SQL bootstrap."
-    warn "Install go-sqlcmd: https://learn.microsoft.com/sql/tools/sqlcmd/sqlcmd-utility"
-    warn "Then run:  ${SCRIPT_DIR}/run-sql-bootstrap.sh"
+  mkdir -p "$GEN_DIR"; chmod 700 "$GEN_DIR"
+  # Resolve sqlcmd: prefer the one on PATH, else auto-download portable go-sqlcmd.
+  if command -v sqlcmd >/dev/null 2>&1; then
+    SQLCMD_BIN="sqlcmd"
   else
-    mkdir -p "$GEN_DIR"; chmod 700 "$GEN_DIR"
+    SQLCMD_BIN="${GEN_DIR}/sqlcmd"
+    if [[ ! -x "$SQLCMD_BIN" ]]; then
+      warn "'sqlcmd' not on PATH - downloading portable go-sqlcmd ..."
+      curl -fsSL -o "$SQLCMD_BIN" \
+        https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64 \
+        && chmod +x "$SQLCMD_BIN" \
+        || die "Could not download go-sqlcmd. Install sqlcmd manually, then run ${SCRIPT_DIR}/run-sql-bootstrap.sh"
+    fi
+    ok "Using portable sqlcmd: ${SQLCMD_BIN}"
+  fi
+  if true; then
     # Render templated SQL with the live endpoint/key/deployment.
     sed -e "s|@@EMBED_URL@@|${EMBED_URL}|g" \
         -e "s|@@AI_KEY@@|${AI_KEY}|g" \
@@ -300,7 +310,7 @@ if [[ "$DO_SQL_BOOTSTRAP" == "1" ]]; then
         "${ROOT_DIR}/sql/04_search_proc.sql" > "${GEN_DIR}/04_search_proc.sql"
     chmod 600 "${GEN_DIR}"/*.sql
 
-    SQLCMD=(sqlcmd -S "tcp:${SQL_SERVER}.database.windows.net,1433" -d "$SQL_DB"
+    SQLCMD=("$SQLCMD_BIN" -S "tcp:${SQL_SERVER}.database.windows.net,1433" -d "$SQL_DB"
             -U "$SQL_ADMIN" -P "$SQL_PASSWORD" -C -l 60)
     log "Applying 01_schema.sql ..."           ; "${SQLCMD[@]}" -i "${ROOT_DIR}/sql/01_schema.sql"
     log "Applying 02_seed_faq.sql ..."         ; "${SQLCMD[@]}" -i "${ROOT_DIR}/sql/02_seed_faq.sql"
