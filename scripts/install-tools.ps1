@@ -24,19 +24,15 @@ if(-not(Get-Command python -EA SilentlyContinue)){
   Start-Process "$env:TEMP\python.exe" -ArgumentList '/quiet','InstallAllUsers=1','PrependPath=1','Include_pip=1' -Wait
 }
 
-# devtunnel (Exercise 4)
-if(-not(Get-Command devtunnel -EA SilentlyContinue)){
-  New-Item -ItemType Directory -Force 'C:\Tools' | Out-Null
-  Invoke-WebRequest 'https://aka.ms/TunnelsCliDownload/win-x64' -OutFile 'C:\Tools\devtunnel.exe'
-  $m=[Environment]::GetEnvironmentVariable('Path','Machine'); if($m -notlike '*C:\Tools*'){[Environment]::SetEnvironmentVariable('Path','C:\Tools;'+$m,'Machine')}
+# devtunnel (Exercise 4) — copy to System32 so it's on PATH for every session
+if(-not(Test-Path 'C:\Windows\System32\devtunnel.exe')){
+  Invoke-WebRequest 'https://aka.ms/TunnelsCliDownload/win-x64' -OutFile 'C:\Windows\System32\devtunnel.exe'
 }
 
-# VS Code extensions: SQL Server, GitHub Copilot, Copilot Chat (Exercise 1/2)
-$code='C:\Program Files\Microsoft VS Code\bin\code.cmd'
-if(Test-Path $code){
-  foreach($ext in 'ms-mssql.mssql','github.copilot','github.copilot-chat'){
-    & $code --install-extension $ext --force
-  }
-}
+# VS Code extensions: SQL Server, GitHub Copilot, Copilot Chat (Exercise 1/2).
+# Auto-installed per-user at next interactive login (run-command runs as SYSTEM).
+$cc='C:\Program Files\Microsoft VS Code\bin\code.cmd'
+$run='cmd /c "'+$cc+'" --install-extension ms-mssql.mssql --force & "'+$cc+'" --install-extension github.copilot --force & "'+$cc+'" --install-extension github.copilot-chat --force'
+Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run' -Name LabExt -Value $run
 
 'installed' | Out-File C:\lab513-bootstrap.txt
