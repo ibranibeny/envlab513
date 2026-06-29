@@ -31,4 +31,12 @@ if(-not(Get-Command devtunnel -EA SilentlyContinue)){
   $m=[Environment]::GetEnvironmentVariable('Path','Machine'); if($m -notlike '*C:\Tools*'){[Environment]::SetEnvironmentVariable('Path','C:\Tools;'+$m,'Machine')}
 }
 
+# VS Code extensions: SQL Server, GitHub Copilot, Copilot Chat (Exercise 1/2)
+$code='C:\Program Files\Microsoft VS Code\bin\code.cmd'
+if(Test-Path $code){
+  foreach($ext in 'ms-mssql.mssql','github.copilot','github.copilot-chat'){
+    & $code --install-extension $ext --force
+  }
+}
+
 'installed' | Out-File C:\lab513-bootstrap.txt
