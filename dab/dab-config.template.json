@@ -1,0 +1,35 @@
+{
+  "$schema": "https://github.com/Azure/data-api-builder/releases/latest/download/dab.draft.schema.json",
+  "data-source": {
+    "database-type": "mssql",
+    "connection-string": "Server=tcp:faq-ai-assistant-{LAB_INSTANCE_ID}.database.windows.net,1433;Initial Catalog=faq-ai-assistant-db;User ID=admin-{LAB_INSTANCE_ID};Password={PASSWORD};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+  },
+  "runtime": {
+    "rest": {
+      "enabled": true
+    },
+    "mcp": {
+      "enabled": true
+    },
+    "host": {
+      "mode": "development"
+    }
+  },
+  "entities": {
+    "faqContent": {
+      "source": {
+        "object": "dbo.FAQ_Content",
+        "type": "table"
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": ["read"]
+        }
+      ],
+      "mcp": {
+        "description": "Approved FAQ content used to answer customer support questions."
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# lab513 environment — never commit credentials
+.vm-cred
+.generated/
+*.cred
+*.secret
