@@ -22,21 +22,23 @@
 
 ---
 
-## 1a. Exercise status summary — Exercise-00 → Exercise-02 ✅ PASSED
+## 1a. Exercise status summary — Exercise-00 → Exercise-04 ✅ PASSED
 
-All three confirmed with real evidence on `lab513vm` / `faq-ai-assistant-db` (2026-06-29). Not assumed — each has a verified artifact or query output.
+All five confirmed with real evidence on `lab513vm` / `faq-ai-assistant-db` (2026-06-29 → 06-30). Not assumed — each has a verified artifact or query output.
 
 | Exercise | Title | Status | Evidence | Detail |
 |---|---|---|---|---|
 | **00** | Environment readiness (Task 6 acceptance checks) | ✅ **PASSED** | `C:\LabFiles\sql_mcp_server` staged (`srv=True, req=True`); SQL Hyperscale + FAQ tables + `dbo.SearchFAQ` confirmed; Foundry `FAQ-Assistant-project` opens | §10.1 |
 | **01** | Database + embeddings + semantic search proc | ✅ **PASSED** | `dbo.FAQ_Content` (14 rows), `dbo.FAQ_Embeddings` `VECTOR(1536)` (14/14 populated via Managed-Identity token), `dbo.SearchFAQ` created + returns ranked rows | §3, §10.1 |
 | **02** | GitHub Copilot semantic-search query | ✅ **PASSED** | Fixed Msg 15151 via `CREATE EXTERNAL MODEL` (token/MI); `AI_GENERATE_EMBEDDINGS` + `VECTOR_DISTANCE` query returned 3 correct rows (`faq_id 5/6/7`, Returns) | §10.2 |
+| **03** | RAG — grounded prompt → GPT-4o | ✅ **PASSED** | `dbo.SearchFAQ` → grounded `@prompt` → `sp_invoke_external_rest_endpoint` to gpt-4o via **token/MI** (`@credential`, no api-key); converted from the lab's api-key path (`disableLocalAuth=true`) | §10.3 |
+| **04** | Foundry agent + local MCP tool (devtunnel) | ✅ **PASSED** | `faq-orchestrator-agent` invokes `search_faq` MCP tool over dev tunnel (`/mcp`); MCP server logs `ListTools`/`CallTool` `200 OK`; agent returns grounded answer from FAQ content | §10.4 |
 
-**Auth posture across all three:** token / **Managed Identity** only — no api-key anywhere (AI account has `disableLocalAuth=true`). Pattern verified against Microsoft Learn.
+**Auth posture across all exercises:** SQL → AI Foundry uses token / **Managed Identity** only — no api-key anywhere (AI account has `disableLocalAuth=true`). The MCP server → SQL layer (Exercise 4) uses SQL auth, as in the official lab. Pattern verified against Microsoft Learn.
 
-**Repo:** `sql/05_external_model.sql` + `deploy.sh` wiring committed (`546e267`); this report (`df3e2a1`) on `master` of `ibranibeny/envlab513`.
+**Repo:** `sql/05_external_model.sql`, `sql/06_rag_chat.sql`, `labfiles/sql_mcp_server/`, and `deploy.sh` wiring committed on `master` of `ibranibeny/envlab513`.
 
-> Still interactive / browser-only (not yet run): Exercise 3 (RAG), Exercise 4 (MCP tool + Foundry agent), Exercise 5 (Fabric), Exercise 6 — see §9.
+> Still interactive / browser-only (not yet run): Exercise 5 (Fabric), Exercise 6 — see §9.
 
 ---
 
@@ -262,7 +264,7 @@ During setup, from your **WSL** shell:
 
 These are portal/interactive steps the CLI cannot do for you:
 - **Exercise 2** — GitHub Copilot sign-in and prompting in VS Code. *(Copilot's semantic-search query verified end-to-end — see §10.2; external model fix committed.)*
-- **Exercise 4** — `devtunnel` host + creating the **MCP tool** and **`faq-orchestrator-agent`** in Foundry (`https://ai.azure.com`, project `FAQ-Assistant-project`).
+- **Exercise 4** — `devtunnel` host + creating the **MCP tool** and **`faq-orchestrator-agent`** in Foundry (`https://ai.azure.com`, project `FAQ-Assistant-project`). *(Verified end-to-end — agent calls `search_faq` over the tunnel; see §10.4.)*
 - **Exercise 5** — Fabric workspace `Workspace{id}`, mirrored DB (mirror **only** `dbo.FAQ_Content`), semantic model `FAQ_Content` (Direct Lake on SQL), report `FAQ_rpt`, lineage.
 
 See `TASKS.md` for the exact click-path of each.
@@ -340,3 +342,38 @@ ORDER BY VECTOR_DISTANCE('cosine', @qv, e.question_embedding) ASC;
 **Repo:** committed as `546e267` on `master` (`sql/05_external_model.sql` + `deploy.sh` wiring).
 
 > Note: `faq_id` values (5/6/7) differ from the lab screenshot (2/15/11) only because the seed insert order differs; the matched questions are identical in meaning.
+
+### 10.3 Exercise 3 (RAG → GPT-4o) — PASSED 2026-06-30
+
+Exercise 3 retrieves FAQ context with `dbo.SearchFAQ`, builds a grounded prompt, and sends it to **gpt-4o** via `sp_invoke_external_rest_endpoint`.
+
+**Token conversion (no api-key):** the official lab authenticates with `@headers = N'{"api-key":"<KEY>"}'`, but this AI account has `disableLocalAuth=true` (key auth returns 401). Converted to **token / Managed Identity**: dropped the api-key header (`@headers = N'{"Content-Type":"application/json"}'`), filled the gpt-4o chat-completions `@url`, and added `@credential = [https://aif-lab513-2139d8.cognitiveservices.azure.com]` (the Managed-Identity DATABASE SCOPED CREDENTIAL). No key is ever stored in the query — see [sql/06_rag_chat.sql](sql/06_rag_chat.sql).
+
+**Flow verified:** `EXEC dbo.SearchFAQ @user_question = N'My product arrived damaged'` → `STRING_AGG` context → grounded `@prompt` (`SELECT @prompt AS grounded_prompt` shows the returns FAQ context) → `sp_invoke_external_rest_endpoint` POST to gpt-4o → `ai_answer` extracted via `JSON_VALUE($.choices[0].message.content)`.
+
+**Gotcha documented:** running only the Task 2 selection raises **Msg 137 — "Must declare the scalar variable @prompt"** because `@prompt` is declared in Task 1. Run the whole batch as one execution (no partial selection, no `GO` between tasks). README ships the full copy-paste script with this note.
+
+**Repo:** `sql/06_rag_chat.sql` (token/MI) + `deploy.sh` render step committed on `master`.
+
+### 10.4 Exercise 4 (Foundry agent + local MCP tool) — PASSED 2026-06-30
+
+The `faq-orchestrator-agent` in Foundry calls a **local MCP server** (`labfiles/sql_mcp_server/server.py`, FastMCP streamable-HTTP on `:8000/mcp`) exposed via **dev tunnel**, which wraps `dbo.SearchFAQ` as the `search_faq` tool.
+
+**Verified end-to-end on the lab VM:**
+
+| Step | Evidence |
+|---|---|
+| MCP server running | `[MCP] Starting FAQ SQL Assistant on http://0.0.0.0:8000`; `[MCP] MCP endpoint : http://0.0.0.0:8000/mcp` |
+| Tool discovery | server log `Processing request of type ListToolsRequest`; `POST/GET /mcp 200 OK` |
+| Agent invocation | server log `Processing request of type CallToolRequest`; Foundry shows `search_faq({ "question": "My product arrived damaged" })` and *"Request has been approved"* |
+| Grounded answer | agent answers from FAQ content (returns/damaged-item) rather than hallucinating |
+
+**Gotchas hit and fixed (all now in README §Exercise 4):**
+- `.venv\Scripts\Activate.ps1` not shipped — it is generated by `python -m venv .venv`.
+- `Missing SQL connection settings` — `server.py` needs a sibling `.env`; `deploy.sh` writes it to the repo root, so it must be copied into `C:\LabFiles\sql_mcp_server`.
+- **HTTP 404 (Not Found)** when Foundry enumerated tools — the endpoint was the tunnel root; the MCP endpoint is `/mcp`. "Not Found" at the root is normal.
+- **No such host is known (11001)** — the `.env` still contained the literal `<LAB_INSTANCE_ID>` placeholder; replacing it with `2139d8` and restarting `server.py` fixed it.
+
+**Auth note:** MCP server → SQL uses SQL auth (Uid/Pwd from `.env`), matching the official lab; the SQL → AI Foundry token/MI posture (Exercises 1–3) is unchanged.
+
+**Repo:** `labfiles/sql_mcp_server/` + README Exercise 4 walkthrough (devtunnel, venv/.env, colored Mermaid flow, troubleshooting) committed on `master`.
