@@ -247,6 +247,14 @@ devtunnel host my-faq-tunnel<LAB_INSTANCE_ID>
 
 Copy the printed `https://<name>.devtunnels.ms` URL — you paste it into Foundry as the **Remote MCP Server endpoint** (Authentication = *Unauthenticated*, matching `--allow-anonymous`).
 
+> **Use the `/mcp` path — the MCP endpoint is not the root URL.** `devtunnel host` prints two forms; prefer the clean subdomain form and append `/mcp`:
+>
+> ```
+> https://<name>-8000.<region>.devtunnels.ms/mcp
+> ```
+>
+> **Opening the tunnel root in a browser returns `Not Found` — that is normal and actually confirms it works.** `server.py` only serves `/mcp`, so a request to `/` (e.g. `https://<name>.devtunnels.ms:8000`) correctly returns `Not Found`. Getting `Not Found` (an HTTP response) means the tunnel relay reached your running server; a *connection refused / 502* would mean `server.py` is not running. Don't validate `/mcp` from a plain browser either — MCP streamable HTTP needs POST + specific headers, so a browser GET still looks odd (405/406). The real validation is connecting it from Foundry (Task 3).
+
 ### Run the MCP server (Task 1) — the missing steps
 
 `.venv\Scripts\Activate.ps1` is **generated** by `python -m venv` (it is not shipped). And `server.py` reads SQL settings from a sibling `.env`, which `deploy.sh` writes to the repo root — so copy it in first:
