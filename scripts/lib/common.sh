@@ -19,6 +19,22 @@ err()  { printf '%s[error]%s %s\n' "$C_RED"   "$C_RESET" "$*" >&2; }
 die()  { err "$*"; exit 1; }
 hr()   { printf '%s\n' "------------------------------------------------------------"; }
 
+# ----- az interop CRLF guard -----------------------------------------------
+# In WSL the Azure CLI is often the Windows az.exe reached via /mnt/c interop
+# (native Linux az can be blocked by GSA). az.exe emits CRLF line endings, and
+# the trailing \r corrupts bash string comparisons and arithmetic (e.g.
+# "invalid arithmetic operator (error token is ...)"). Wrap az so every call
+# strips CR from its output. `set -o pipefail` (set by the callers) preserves
+# az's real exit status through the pipe.
+if command -v az >/dev/null 2>&1; then
+  _AZ_BIN="$(command -v az)"
+  case "$_AZ_BIN" in
+    /mnt/*|*.exe)
+      az() { "$_AZ_BIN" "$@" | tr -d '\r'; }
+      ;;
+  esac
+fi
+
 # ----- prerequisite checks -------------------------------------------------
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Required command '$1' not found in PATH. $2"
