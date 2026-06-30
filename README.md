@@ -146,3 +146,79 @@ EXEC sp_invoke_external_rest_endpoint
 > `03_generate_embeddings.sql`).
 
 Prerequisites (created by the SQL bootstrap): `dbo.SearchFAQ`, the master key, the Managed-Identity **DATABASE SCOPED CREDENTIAL**, and the **Cognitive Services OpenAI User** role on the SQL server's managed identity.
+
+### Complete runnable script — Exercise 3 Task 2 (token auth)
+
+Run the **whole** block in one execution (Task 1 builds `@prompt`, Task 2 uses it). In the mssql extension, click in the editor with **no selection** and press **Ctrl+Shift+E** (or **Ctrl+A** then Run) — do **not** run only the Task 2 part or you get `Msg 137: Must declare the scalar variable "@prompt"`. Do **not** add `GO` between the tasks.
+
+```sql
+DECLARE @user_question NVARCHAR(1000) = N'My product arrived damaged';
+DECLARE @context NVARCHAR(MAX);
+DECLARE @prompt NVARCHAR(MAX);
+
+CREATE TABLE #searchResults (
+    faq_id INT,
+    category NVARCHAR(200),
+    question NVARCHAR(MAX),
+    answer NVARCHAR(MAX)
+);
+
+INSERT INTO #searchResults (faq_id, category, question, answer)
+EXEC dbo.SearchFAQ @user_question = @user_question;
+
+SELECT @context =
+(
+    SELECT STRING_AGG(
+        CONCAT(
+            'Question: ', question, CHAR(10),
+            'Answer: ', answer
+        ),
+        CHAR(10) + CHAR(10)
+    )
+    FROM #searchResults
+);
+
+SET @prompt =
+N'Use ONLY the context below to answer the question.
+Context:
+' + ISNULL(@context, N'No relevant FAQ context found.') + N'
+Question:
+' + @user_question + N'
+If the answer is not in the context, say you do not know.';
+
+SELECT @prompt AS grounded_prompt;
+
+DROP TABLE #searchResults;
+
+DECLARE @payload  NVARCHAR(MAX);
+DECLARE @response NVARCHAR(MAX);
+-- TIDAK ada api-key lagi; token diambil dari @credential di bawah
+DECLARE @headers  NVARCHAR(MAX) = N'{"Content-Type":"application/json"}';
+
+SET @payload = N'{' +
+N'"messages":[' +
+N'{"role":"system","content":"You are a helpful assistant that answers questions by using only approved FAQ context."},' +
+N'{"role":"user","content":"' + STRING_ESCAPE(@prompt, 'json') + N'"}' +
+N'],' +
+N'"temperature":0' +
+N'}';
+
+EXEC sp_invoke_external_rest_endpoint
+    @method     = 'POST',
+    @url        = N'https://aif-lab513-2139d8.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21',
+    @headers    = @headers,
+    @credential = [https://aif-lab513-2139d8.cognitiveservices.azure.com],   -- TOKEN, bukan api-key
+    @payload    = @payload,
+    @response   = @response OUTPUT;
+
+SELECT
+    @response AS raw_response,
+    COALESCE(
+        JSON_VALUE(@response, '$.result.choices[0].message.content'),
+        JSON_VALUE(@response, '$.choices[0].message.content'),
+        JSON_VALUE(@response, '$.output[0].content[0].text'),
+        @response
+    ) AS ai_answer;
+```
+
+Try other questions by changing `@user_question` — e.g. `N'How do I track my order?'` or `N'Can I pay using cryptocurrency?'` (the latter should answer *I do not know*, demonstrating RAG grounding).
