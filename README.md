@@ -382,34 +382,35 @@ Tip: `Select-String LAB_INSTANCE_ID .env` should return **nothing** — if it pr
 ### Flow diagram
 
 ```mermaid
-flowchart LR
-    User([User question]):::user --> Agent
+flowchart TB
+    User([User question]):::user
 
-    subgraph Cloud["☁️ Azure (Microsoft Foundry)"]
-        Agent[faq-orchestrator-agent<br/>GPT-4o]:::agent
+    subgraph Cloud["☁️ Azure — Microsoft Foundry"]
+        Agent["faq-orchestrator-agent · GPT-4o"]:::agent
     end
 
     subgraph Tunnel["🔒 Dev Tunnels service"]
-        DT[[https://name.devtunnels.ms]]:::tunnel
+        DT[["https://name.devtunnels.ms"]]:::tunnel
     end
 
-    subgraph VM["🖥️ Lab VM (localhost:8000)"]
-        MCP[MCP server<br/>server.py /mcp]:::mcp
+    subgraph VM["🖥️ Lab VM — localhost:8000"]
+        MCP["MCP server · server.py /mcp"]:::mcp
     end
 
-    subgraph DB["🗄️ Azure SQL Hyperscale"]
-        Proc[dbo.SearchFAQ<br/>vector search]:::sql
-        Foundry2[(AI Foundry<br/>text-embedding-3-small)]:::embed
+    subgraph DB["🗄️ Azure SQL Hyperscale + AI Foundry"]
+        Proc["dbo.SearchFAQ · vector search"]:::sql
+        Foundry2[("AI Foundry · text-embedding-3-small")]:::embed
     end
 
-    Agent -- "1 MCP tool call (HTTPS)" --> DT
-    DT -- "2 relay to local :8000" --> MCP
-    MCP -- "3 EXEC dbo.SearchFAQ" --> Proc
-    Proc -- "embed query (token/MI)" --> Foundry2
-    Proc -- "4 top FAQ rows" --> MCP
-    MCP -- "5 tool result" --> DT
-    DT --> Agent
-    Agent -- "6 grounded answer" --> User
+    User -- "1 ask" --> Agent
+    Agent -- "2 MCP tool call (HTTPS)" --> DT
+    DT -- "3 relay to local :8000" --> MCP
+    MCP -- "4 EXEC dbo.SearchFAQ" --> Proc
+    Proc -- "5 embed query (token/MI)" --> Foundry2
+    Proc -- "6 top FAQ rows" --> MCP
+    MCP -- "7 tool result" --> DT
+    DT -- "8 result" --> Agent
+    Agent -- "9 grounded answer" --> User
 
     classDef user fill:#0078D4,stroke:#003366,color:#fff;
     classDef agent fill:#8661C5,stroke:#3B2E58,color:#fff;
