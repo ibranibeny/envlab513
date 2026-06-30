@@ -9,20 +9,20 @@ Reference: [microsoft/Build26-LAB513 · exercise-00.md](https://github.com/micro
 Follow these steps top to bottom. Each step links to the section/file that does the work. Exercises 00–04 are **verified working** (see [REPORT.md](REPORT.md) §1a); 05–06 are interactive.
 
 ```mermaid
-flowchart TD
-    A["0 · Prerequisites"]:::prep
-    B["1 · Create lab VM + tools"]:::prep
-    C["2 · Clone repo + stage C:\\LabFiles"]:::prep
-    D["3 · Provision Azure (deploy.sh)"]:::prep
-    E["Exercise 00 · Readiness ✅"]:::ex
-    F["Exercise 01 · Schema + embeddings + SearchFAQ ✅"]:::ex
-    G["Exercise 02 · Copilot semantic search ✅"]:::ex
-    H["Exercise 03 · RAG → GPT-4o ✅"]:::ex
-    I["Exercise 04 · Foundry agent + MCP ✅"]:::ex
-    J["Exercise 05 · Fabric (manual)"]:::manual
-    K["Teardown (teardown.sh)"]:::done
-
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+flowchart LR
+    subgraph SETUP["🔧 Setup"]
+        direction TB
+        A["0 · Prerequisites"]:::prep --> B["1 · Lab VM + tools"]:::prep --> C["2 · Clone + stage C:\\LabFiles"]:::prep --> D["3 · Provision (deploy.sh)"]:::prep
+    end
+    subgraph EXERCISES["📘 Exercises (00–05)"]
+        direction TB
+        E["00 · Readiness ✅"]:::ex --> F["01 · Schema + embeddings + SearchFAQ ✅"]:::ex --> G["02 · Copilot semantic search ✅"]:::ex --> H["03 · RAG → GPT-4o ✅"]:::ex --> I["04 · Foundry agent + MCP ✅"]:::ex --> J["05 · Fabric (manual)"]:::manual
+    end
+    subgraph WRAP["🧹 Wrap-up"]
+        direction TB
+        K["Teardown (teardown.sh)"]:::done
+    end
+    SETUP --> EXERCISES --> WRAP
 
     classDef prep fill:#0078D4,stroke:#003366,color:#fff;
     classDef ex fill:#107C10,stroke:#0B520B,color:#fff;
