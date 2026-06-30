@@ -390,6 +390,34 @@ fi
 # Done
 # ===========================================================================
 hr; ok "LAB513 deployment finished."; hr
+
+# ----- consolidated credentials (VM + SQL) ---------------------------------
+# Workshop requirement: after deploy, always surface BOTH the lab VM login and
+# the Azure SQL login (password included). Secrets also live in .env / .vm-cred.
+VM_CRED_FILE="${ROOT_DIR}/.vm-cred"
+hr; printf '%sCREDENTIALS (also saved to .env / .vm-cred)%s\n' "$C_BOLD" "$C_RESET"; hr
+printf '%s1) Lab VM (RDP)%s\n' "$C_BOLD" "$C_RESET"
+if [[ -f "$VM_CRED_FILE" ]]; then
+  # PowerShell Out-File adds a BOM / UTF-16 bytes; keep only printable chars.
+  VM_LINE="$(tr -cd '[:print:]\n' < "$VM_CRED_FILE")"
+  for kv in $VM_LINE; do
+    case "$kv" in
+      USER=*)     printf '   User     : %s\n' "${kv#USER=}";;
+      PASSWORD=*) printf '   Password : %s\n' "${kv#PASSWORD=}";;
+      IP=*)       printf '   Public IP: %s   (RDP 3389)\n' "${kv#IP=}";;
+      FQDN=*)     printf '   FQDN     : %s\n' "${kv#FQDN=}";;
+    esac
+  done
+else
+  printf '   (.vm-cred not found - run scripts/create-vm.ps1 to create the VM)\n'
+fi
+printf '%s2) Azure SQL%s\n' "$C_BOLD" "$C_RESET"
+printf '   Server   : %s.database.windows.net\n' "$SQL_SERVER"
+printf '   Database : %s\n' "$SQL_DB"
+printf '   Login    : %s\n' "$SQL_ADMIN"
+printf '   Password : %s\n' "$SQL_PASSWORD"
+hr
+
 cat <<EOF
   Next steps:
     1. Review outputs:        cat ${ENV_FILE}
