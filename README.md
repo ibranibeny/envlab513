@@ -4,6 +4,46 @@ Self-hosted setup for **LAB513 — Build an AI app with Azure SQL Hyperscale, Mi
 
 Reference: [microsoft/Build26-LAB513 · exercise-00.md](https://github.com/microsoft/Build26-LAB513-build-an-ai-app-with-azure-sql-hyperscale-microsoft-fabric-foundry/blob/main/docs/Lab/Instructions/exercise-00.md)
 
+## How to use this repo — read in order
+
+Follow these steps top to bottom. Each step links to the section/file that does the work. Exercises 00–04 are **verified working** (see [REPORT.md](REPORT.md) §1a); 05–06 are interactive.
+
+```mermaid
+flowchart TD
+    A["0 · Prerequisites<br/>Git, az login, Copilot, VS Code"]:::prep
+    B["1 · Lab VM + tools<br/>create-vm.ps1 → install-tools.ps1"]:::prep
+    C["2 · Clone + stage lab files<br/>C:\\LabFiles"]:::prep
+    D["3 · Provision Azure<br/>deploy.sh (SQL, AI Foundry, Fabric)"]:::prep
+    E["Ex 00 · Readiness checks ✅"]:::ex
+    F["Ex 01 · Schema + embeddings + SearchFAQ ✅<br/>auto by deploy.sh"]:::ex
+    G["Ex 02 · Copilot semantic search ✅<br/>token/MI — sql/05"]:::ex
+    H["Ex 03 · RAG → GPT-4o ✅<br/>run sql/06 manually"]:::ex
+    I["Ex 04 · Foundry agent + MCP ✅<br/>devtunnel"]:::ex
+    J["Ex 05 · Fabric (manual)"]:::manual
+    K["Teardown<br/>teardown.sh — stops cost"]:::end
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+
+    classDef prep fill:#0078D4,stroke:#003366,color:#fff;
+    classDef ex fill:#107C10,stroke:#0B520B,color:#fff;
+    classDef manual fill:#C19C00,stroke:#6E5900,color:#fff;
+    classDef end fill:#605E5C,stroke:#2B2A29,color:#fff;
+```
+
+| # | Step | Where in this README / repo |
+|---|---|---|
+| 0 | Install prerequisites (Git, `az login --use-device-code`, Copilot, VS Code extensions) | [§Prerequisites](#prerequisites) |
+| 1 | Create the lab VM and install tools | [§What gets installed / provisioned](#what-gets-installed--provisioned) · `scripts/create-vm.ps1` |
+| 2 | Clone the repo and stage lab files to `C:\LabFiles` | [§Quick start on the lab VM](#quick-start-on-the-lab-vm) |
+| 3 | Provision Azure (SQL Hyperscale, AI Foundry, Fabric) | [§Provision (deploy.sh)](#provision-deploysh) |
+| 4 | **Exercise 00** — verify environment readiness | [§Exercise-00 readiness](#exercise-00-readiness) |
+| 5 | **Exercise 01** — schema, embeddings, `dbo.SearchFAQ` (run by `deploy.sh`) | `sql/01..04_*.sql` |
+| 6 | **Exercise 02** — Copilot semantic-search query (token/MI) | [§Exercise 2 & 3 — token auth](#exercise-2--3--token-auth-instead-of-api-key-workshop-note) · `sql/05_external_model.sql` |
+| 7 | **Exercise 03** — RAG grounded prompt → GPT-4o (run manually) | [§Complete runnable script — Exercise 3 Task 2](#complete-runnable-script--exercise-3-task-2-token-auth) · `sql/06_rag_chat.sql` |
+| 8 | **Exercise 04** — Foundry agent + local MCP tool over dev tunnel | [§Exercise 4](#exercise-4--orchestrate-with-a-foundry-agent--local-mcp-server) |
+| 9 | **Exercise 05** — Microsoft Fabric (interactive, portal) | `REPORT.md` §9 |
+| 10 | Tear down to stop cost | [§Provision (deploy.sh)](#provision-deploysh) · `scripts/teardown.sh` |
+
 ## Layout
 
 | Path | Purpose |
