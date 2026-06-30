@@ -113,4 +113,36 @@ EXEC sp_invoke_external_rest_endpoint
 
 Full script (Task 1 + Task 2) is in `sql/06_rag_chat.sql`; `deploy.sh` renders a ready-to-run copy to `.generated/06_rag_chat.sql` with your account URL filled in.
 
+### Before → after (the exact official snippet)
+
+The official lab Task 2 snippet (api-key, empty `@url`):
+
+```sql
+DECLARE @headers NVARCHAR(MAX) = N'{"api-key": ""}';
+EXEC sp_invoke_external_rest_endpoint
+    @method  = 'POST',
+    @url     = N'',
+    @headers = @headers,
+    @payload = @payload,
+    @response = @response OUTPUT;
+```
+
+Becomes this **token** version — concrete values for the **current deployment** (`aif-lab513-2139d8`):
+
+```sql
+DECLARE @headers NVARCHAR(MAX) = N'{"Content-Type":"application/json"}';   -- no api-key
+EXEC sp_invoke_external_rest_endpoint
+    @method     = 'POST',
+    @url        = N'https://aif-lab513-2139d8.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21',
+    @headers    = @headers,
+    @credential = [https://aif-lab513-2139d8.cognitiveservices.azure.com],   -- TOKEN (Managed Identity)
+    @payload    = @payload,
+    @response   = @response OUTPUT;
+```
+
+> Replace `aif-lab513-2139d8` with your own AI account name if you redeploy — the
+> credential name must equal the account URL **without** a trailing slash, and it
+> must already exist as a Managed-Identity DATABASE SCOPED CREDENTIAL (created by
+> `03_generate_embeddings.sql`).
+
 Prerequisites (created by the SQL bootstrap): `dbo.SearchFAQ`, the master key, the Managed-Identity **DATABASE SCOPED CREDENTIAL**, and the **Cognitive Services OpenAI User** role on the SQL server's managed identity.
