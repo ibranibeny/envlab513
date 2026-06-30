@@ -8,3 +8,18 @@
 scripts/load-on-vm.ps1
 scripts/verify-objects.ps1
 scripts/verify-on-vm.ps1
+# local Managed-Identity / diagnostic helper scripts (hardcoded IDs, not for repo)
+scripts/assignid.ps1
+scripts/assignid2.ps1
+scripts/check-mi.ps1
+scripts/enableid.ps1
+scripts/help.ps1
+scripts/idraw.ps1
+scripts/idstate.ps1
+scripts/mi3.ps1
+scripts/mi3check.ps1
+scripts/porttest.ps1
+scripts/role.ps1
+scripts/setup-mi.ps1
+scripts/setup-mi2.ps1
+scripts/state.ps1
