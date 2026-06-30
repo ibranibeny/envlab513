@@ -225,6 +225,8 @@ Try other questions by changing `@user_question` — e.g. `N'How do I track my o
 
 ## Exercise 4 — Orchestrate with a Foundry Agent + local MCP server
 
+> **Status: ✅ verified end-to-end.** Foundry agent → dev tunnel → local MCP server (`/mcp`) → `dbo.SearchFAQ` on Azure SQL Hyperscale → grounded answer. The agent invokes the `search_faq` tool and answers from FAQ content (e.g. *"My product arrived damaged"* → *"How do I return a damaged item?"*).
+
 Exercise 4 doesn't add SQL. It runs a **local MCP server** (`labfiles/sql_mcp_server/server.py`) that wraps `dbo.SearchFAQ`, then lets a **Microsoft Foundry agent** call it as a tool. Because the agent runs in Azure but the MCP server runs on your VM (`http://0.0.0.0:8000/mcp`), you need a way for the cloud agent to reach a *local* endpoint — that's what **dev tunnel** does.
 
 ### What is `devtunnel`?
