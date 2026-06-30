@@ -346,6 +346,11 @@ if [[ "$DO_SQL_BOOTSTRAP" == "1" ]]; then
     sed -e "s|@@EMBED_URL@@|${EMBED_URL}|g" \
         -e "s|@@AI_ACCOUNT_URL@@|${AI_ACCOUNT_URL}|g" \
         "${ROOT_DIR}/sql/05_external_model.sql" > "${GEN_DIR}/05_external_model.sql"
+    # 06 is an interactive Exercise 3 (RAG) script — rendered for the audience to
+    # run manually (mssql extension / portal Query editor), NOT auto-executed.
+    sed -e "s|@@CHAT_URL@@|${CHAT_URL}|g" \
+        -e "s|@@AI_ACCOUNT_URL@@|${AI_ACCOUNT_URL}|g" \
+        "${ROOT_DIR}/sql/06_rag_chat.sql" > "${GEN_DIR}/06_rag_chat.sql"
     chmod 600 "${GEN_DIR}"/*.sql
 
     SQLCMD=("$SQLCMD_BIN" -S "tcp:${SQL_SERVER}.database.windows.net,1433" -d "$SQL_DB"
@@ -356,6 +361,7 @@ if [[ "$DO_SQL_BOOTSTRAP" == "1" ]]; then
     log "Generating embeddings (calls Azure OpenAI) ..." ; "${SQLCMD[@]}" -i "${GEN_DIR}/03_generate_embeddings.sql"
     log "Registering external model (Exercise 2) ..."     ; "${SQLCMD[@]}" -i "${GEN_DIR}/05_external_model.sql"
     ok "SQL bootstrap complete (FAQ_Content, FAQ_Embeddings, dbo.SearchFAQ ready)."
+    log "Exercise 3 (RAG) script ready to run MANUALLY: ${GEN_DIR}/06_rag_chat.sql (token auth, gpt-4o)."
   fi
 fi
 

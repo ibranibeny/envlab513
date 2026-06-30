@@ -13,6 +13,8 @@ Reference: [microsoft/Build26-LAB513 · exercise-00.md](https://github.com/micro
 | `scripts/install-tools.ps1` | VM bootstrap: VS Code, Azure CLI, Git, Python 3.12, devtunnel |
 | `scripts/create-vm.ps1` | Create lab VM and run `install-tools.ps1` |
 | `sql/01..04_*.sql` | FAQ schema, seed, embeddings, `dbo.SearchFAQ` |
+| `sql/05_external_model.sql` | EXTERNAL MODEL for `AI_GENERATE_EMBEDDINGS` (Exercise 2) — token/MI |
+| `sql/06_rag_chat.sql` | Exercise 3 (RAG): grounded prompt → GPT-4o — **token/MI, run manually** |
 | `labfiles/sql_mcp_server/` | MCP server (`server.py`, `requirements.txt`) → staged to `C:\LabFiles` |
 | `labfiles/sql-mcp-lab/` | DAB config + VS Code MCP wiring → staged to `C:\LabFiles` |
 | `REPORT.md` | Honest as-built report (regions, security, cost) |
@@ -87,3 +89,28 @@ Lab files must live at the paths Exercise-00 checks: `C:\LabFiles\sql_mcp_server
 | Microsoft Fabric workspace | manual (Exercise 5) |
 
 > Secrets are never committed: `.env`, `.vm-cred`, and SQL-password diagnostic scripts are gitignored.
+
+## Exercise 2 & 3 — token auth instead of api-key (workshop note)
+
+This environment's AI account has **local (key) auth disabled** (`disableLocalAuth=true`), so every official lab step that uses an **api-key** must be changed to a **token (Managed Identity)** call. The audience should know the difference:
+
+| Lab step | Official (api-key) | This repo (token / Managed Identity) |
+|---|---|---|
+| Embeddings / `AI_GENERATE_EMBEDDINGS` | api-key in DSC `SECRET` | DSC `IDENTITY='Managed Identity', SECRET='{"resourceid":"https://cognitiveservices.azure.com"}'` + `CREATE EXTERNAL MODEL` — `sql/05_external_model.sql` |
+| Exercise 3 RAG → GPT-4o | `@headers = N'{"api-key":"<KEY>"}'` | `@credential = [https://<ai-account>.cognitiveservices.azure.com]` (no key) — `sql/06_rag_chat.sql` |
+
+**Exercise 3 (RAG) — run manually** in the mssql extension or portal Query editor. The key change in the `sp_invoke_external_rest_endpoint` call:
+
+```sql
+EXEC sp_invoke_external_rest_endpoint
+    @method     = 'POST',
+    @url        = N'https://<ai-account>.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21',
+    @headers    = N'{"Content-Type":"application/json"}',   -- NO api-key here
+    @credential = [https://<ai-account>.cognitiveservices.azure.com],  -- TOKEN (Managed Identity)
+    @payload    = @payload,
+    @response   = @response OUTPUT;
+```
+
+Full script (Task 1 + Task 2) is in `sql/06_rag_chat.sql`; `deploy.sh` renders a ready-to-run copy to `.generated/06_rag_chat.sql` with your account URL filled in.
+
+Prerequisites (created by the SQL bootstrap): `dbo.SearchFAQ`, the master key, the Managed-Identity **DATABASE SCOPED CREDENTIAL**, and the **Cognitive Services OpenAI User** role on the SQL server's managed identity.
