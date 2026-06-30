@@ -29,8 +29,13 @@ require_cmd() {
 # so we check explicitly and fail with an actionable message.
 preflight_network() {
   log "Checking outbound connectivity to Azure (management.azure.com) ..."
-  if curl -fsS -m 8 -o /dev/null "https://management.azure.com/"; then
-    ok "Azure control plane reachable."
+  # A bare, unauthenticated GET to ARM returns HTTP 400/401 - that still proves
+  # the endpoint is REACHABLE. Treat "got any HTTP status" as success; only a
+  # real connection/DNS failure (curl code 000) means there is no route.
+  local code
+  code="$(curl -sS -m 8 -o /dev/null -w '%{http_code}' "https://management.azure.com/" 2>/dev/null || echo 000)"
+  if [[ "$code" != "000" ]]; then
+    ok "Azure control plane reachable (HTTP ${code})."
     return 0
   fi
   err "Cannot reach https://management.azure.com from this shell."
