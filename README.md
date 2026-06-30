@@ -10,24 +10,24 @@ Follow these steps top to bottom. Each step links to the section/file that does 
 
 ```mermaid
 flowchart TD
-    A["0 · Prerequisites<br/>Git, az login, Copilot, VS Code"]:::prep
-    B["1 · Lab VM + tools<br/>create-vm.ps1 → install-tools.ps1"]:::prep
-    C["2 · Clone + stage lab files<br/>C:\\LabFiles"]:::prep
-    D["3 · Provision Azure<br/>deploy.sh (SQL, AI Foundry, Fabric)"]:::prep
-    E["Ex 00 · Readiness checks ✅"]:::ex
-    F["Ex 01 · Schema + embeddings + SearchFAQ ✅<br/>auto by deploy.sh"]:::ex
-    G["Ex 02 · Copilot semantic search ✅<br/>token/MI — sql/05"]:::ex
-    H["Ex 03 · RAG → GPT-4o ✅<br/>run sql/06 manually"]:::ex
-    I["Ex 04 · Foundry agent + MCP ✅<br/>devtunnel"]:::ex
-    J["Ex 05 · Fabric (manual)"]:::manual
-    K["Teardown<br/>teardown.sh — stops cost"]:::end
+    A["0 · Prerequisites"]:::prep
+    B["1 · Create lab VM + tools"]:::prep
+    C["2 · Clone repo + stage C:\\LabFiles"]:::prep
+    D["3 · Provision Azure (deploy.sh)"]:::prep
+    E["Exercise 00 · Readiness ✅"]:::ex
+    F["Exercise 01 · Schema + embeddings + SearchFAQ ✅"]:::ex
+    G["Exercise 02 · Copilot semantic search ✅"]:::ex
+    H["Exercise 03 · RAG → GPT-4o ✅"]:::ex
+    I["Exercise 04 · Foundry agent + MCP ✅"]:::ex
+    J["Exercise 05 · Fabric (manual)"]:::manual
+    K["Teardown (teardown.sh)"]:::done
 
     A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
 
     classDef prep fill:#0078D4,stroke:#003366,color:#fff;
     classDef ex fill:#107C10,stroke:#0B520B,color:#fff;
     classDef manual fill:#C19C00,stroke:#6E5900,color:#fff;
-    classDef end fill:#605E5C,stroke:#2B2A29,color:#fff;
+    classDef done fill:#605E5C,stroke:#2B2A29,color:#fff;
 ```
 
 | # | Step | Where in this README / repo |
