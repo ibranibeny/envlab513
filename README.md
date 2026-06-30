@@ -245,7 +245,13 @@ devtunnel port create my-faq-tunnel<LAB_INSTANCE_ID> -p 8000 --protocol http
 devtunnel host my-faq-tunnel<LAB_INSTANCE_ID>
 ```
 
-Copy the printed `https://<name>.devtunnels.ms` URL — you paste it into Foundry as the **Remote MCP Server endpoint** (Authentication = *Unauthenticated*, matching `--allow-anonymous`).
+Copy the printed URL and **append `/mcp`** — paste it into Foundry as the **Remote MCP Server endpoint** (Authentication = *Unauthenticated*, matching `--allow-anonymous`):
+
+```
+https://<name>-8000.<region>.devtunnels.ms/mcp
+```
+
+Without `/mcp`, Foundry enumerates tools against the root path and fails with **HTTP 404 (Not Found)**.
 
 > **Use the `/mcp` path — the MCP endpoint is not the root URL.** `devtunnel host` prints two forms; prefer the clean subdomain form and append `/mcp`:
 >
@@ -312,6 +318,24 @@ python server.py
 ```
 
 The password and FQDN are in the `.env` that `deploy.sh` wrote (repo root, e.g. `C:\Lab\envlab513\.env`). Make sure the `(.venv)` prefix is still in your prompt before running `server.py`.
+
+### Troubleshooting: `No such host is known (11001)` from the agent
+
+If Foundry connects fine (it discovers `search_faq`) but invoking the tool returns:
+
+```
+TCP Provider: No such host is known (11001) ... tcp:faq-ai-assistant-<LAB_INSTANCE_ID>.database.windows.net,1433
+```
+
+…then your `.env` still contains the literal **`<LAB_INSTANCE_ID>`** placeholder (copied from `.env.example` but not filled in), so the SQL hostname doesn't resolve. Replace the placeholders with your real instance id, then **restart `server.py`** (Ctrl+C, then `python server.py` again — `devtunnel host` can keep running):
+
+```powershell
+cd C:\LabFiles\sql_mcp_server
+copy C:\Lab\envlab513\.env .env   # safest — already has the real values
+python server.py
+```
+
+Tip: `Select-String LAB_INSTANCE_ID .env` should return **nothing** — if it prints a line, the placeholder is still there.
 
 ### Flow diagram
 
