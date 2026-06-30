@@ -253,9 +253,13 @@ Write-Output "VM-BOOTSTRAP-DONE"
 PSTAIL
   } > "$ps"
 
+  # NOTE: pass the script CONTENT inline rather than '@file'. The Azure CLI
+  # here is Windows az.exe invoked from WSL, which cannot read WSL paths like
+  # /tmp/...; '@/tmp/script.ps1' would be sent to the VM literally and fail to
+  # parse. Capture BOTH stdout and stderr (value[].message) so real errors show.
   msg=$(az vm run-command invoke -g "$vm_rg" -n "$vm_name" \
-        --command-id RunPowerShellScript --scripts @"$ps" \
-        --query "value[0].message" -o tsv 2>&1)
+        --command-id RunPowerShellScript --scripts "$(cat "$ps")" \
+        --query "value[].message" -o tsv 2>&1)
   rm -f "$ps"
   printf '%s\n' "$msg"
   grep -q "VM-BOOTSTRAP-DONE" <<<"$msg"

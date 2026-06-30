@@ -24,6 +24,7 @@ source "${SCRIPT_DIR}/lib/common.sh"
 
 ENV_FILE="${ROOT_DIR}/.env"
 GEN_DIR="${ROOT_DIR}/.generated"
+VM_CRED_FILE="${ROOT_DIR}/.vm-cred"
 
 LAB_INSTANCE_ID=""
 RG=""
@@ -59,6 +60,13 @@ fi
 [[ -n "$CLI_INSTANCE" ]] && LAB_INSTANCE_ID="$CLI_INSTANCE"
 RG="${CLI_RG:-${RESOURCE_GROUP:-${RG:-}}}"
 
+# ----- discover the optional lab VM resource group (from .vm-cred) ---------
+# deploy.sh --with-vm writes .vm-cred as: VM=.. RG=.. LOC=.. USER=.. ...
+VM_RG=""
+if [[ -f "$VM_CRED_FILE" ]]; then
+  VM_RG="$(sed -n 's/.*\bRG=\([^ ]*\).*/\1/p' "$VM_CRED_FILE" | tr -d '\r' | head -n1)"
+fi
+
 # Derive RG from instance id if still unknown.
 if [[ -z "$RG" && -n "$LAB_INSTANCE_ID" ]]; then
   RG="rg-lab513-${LAB_INSTANCE_ID}"
@@ -87,6 +95,7 @@ fi
 hr
 printf '%sThis will DELETE resource group %s and ALL resources in it.%s\n' "$C_BOLD" "$RG" "$C_RESET"
 [[ -n "$AI_FOUNDRY" ]] && printf 'It will also PURGE the soft-deleted AI account %s.\n' "$AI_FOUNDRY"
+[[ -n "$VM_RG" && "$VM_RG" != "$RG" ]] && printf 'It will also DELETE the lab VM resource group %s.\n' "$VM_RG"
 hr
 confirm "Are you absolutely sure?" || die "Aborted by user."
 
@@ -105,6 +114,17 @@ if az group show -n "$RG" >/dev/null 2>&1; then
   log "Deleting resource group ${RG} (this can take several minutes) ..."
   az group delete -n "$RG" --yes -o none
   ok "Resource group ${RG} deleted."
+fi
+
+# ----- delete the optional lab VM resource group --------------------------
+if [[ -n "$VM_RG" && "$VM_RG" != "$RG" ]]; then
+  if az group show -n "$VM_RG" >/dev/null 2>&1; then
+    log "Deleting lab VM resource group ${VM_RG} (this can take several minutes) ..."
+    az group delete -n "$VM_RG" --yes -o none
+    ok "Resource group ${VM_RG} deleted."
+  else
+    warn "Lab VM resource group '${VM_RG}' not found (already deleted?)."
+  fi
 fi
 
 # ----- purge soft-deleted AI (Cognitive Services) account ------------------
@@ -131,6 +151,9 @@ if [[ -f "$ENV_FILE" ]]; then
   else
     warn "Kept ${ENV_FILE} - delete it manually when done."
   fi
+fi
+if [[ -f "$VM_CRED_FILE" ]]; then
+  rm -f "$VM_CRED_FILE"; ok "Removed ${VM_CRED_FILE}."
 fi
 
 hr; ok "LAB513 teardown complete."; hr

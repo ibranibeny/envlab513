@@ -324,7 +324,8 @@ if [[ "$DEPLOY_VM" == "1" ]]; then
     ok "Lab VM ${VM_NAME} already exists (reusing)."
   else
     VM_PWD="$(gen_password)"
-    VM_DNS="${VM_NAME}$(LC_ALL=C tr -dc 'a-z0-9' </dev/urandom | head -c 5)"
+    # Random DNS suffix via openssl (no pipe -> avoids SIGPIPE under set -o pipefail).
+    VM_DNS="${VM_NAME}$(openssl rand -hex 3 2>/dev/null || date +%s | tail -c 6)"
     az vm create -g "$VM_RG" -n "$VM_NAME" -l "$LOCATION" \
       --image "$VM_IMAGE" --size "$VM_SIZE" \
       --admin-username "$VM_USER" --admin-password "$VM_PWD" \
@@ -341,7 +342,7 @@ if [[ "$DEPLOY_VM" == "1" ]]; then
     if [[ -f "${SCRIPT_DIR}/install-tools.ps1" ]]; then
       log "Installing VS Code + Azure CLI on the VM (best effort, may take a few minutes) ..."
       if az vm run-command invoke -g "$VM_RG" -n "$VM_NAME" --command-id RunPowerShellScript \
-            --scripts @"${SCRIPT_DIR}/install-tools.ps1" -o none 2>/dev/null; then
+            --scripts "$(cat "${SCRIPT_DIR}/install-tools.ps1")" -o none 2>/dev/null; then
         ok "VM tooling installed (VS Code + Azure CLI)."
       else
         warn "VM tooling install skipped/failed (non-fatal) - install manually on the VM if needed."
