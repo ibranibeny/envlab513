@@ -275,6 +275,36 @@ Expected banner (keep this terminal running):
 
 > Note: this layer (MCP server → SQL) uses **SQL auth** (Uid/Pwd from `.env`), as in the official lab. The token/Managed-Identity auth applies to the **SQL → AI Foundry** calls in Exercises 2 & 3.
 
+### Troubleshooting: `Missing SQL connection settings`
+
+If `python server.py` exits immediately with:
+
+```
+Missing SQL connection settings. Copy .env.example to .env and fill in SQL_FQDN / SQL_ADMIN / SQL_PASSWORD (see lab513/.env from deploy.sh).
+```
+
+…then `server.py` could not find a `.env` next to it (so `SQL_FQDN` / `SQL_ADMIN` are empty). Create the `.env` in the **same folder** as `server.py`:
+
+```powershell
+cd C:\LabFiles\sql_mcp_server
+
+# Option A — copy the one deploy.sh generated (has the real values)
+copy C:\Lab\envlab513\.env .env
+
+# Option B — write it manually (replace <LAB_INSTANCE_ID> + password)
+@"
+SQL_FQDN=faq-ai-assistant-<LAB_INSTANCE_ID>.database.windows.net
+SQL_DB=faq-ai-assistant-db
+SQL_ADMIN=admin-<LAB_INSTANCE_ID>
+SQL_PASSWORD=<your-sql-password>
+ODBC_DRIVER=ODBC Driver 18 for SQL Server
+"@ | Set-Content -Encoding ascii .env
+
+python server.py
+```
+
+The password and FQDN are in the `.env` that `deploy.sh` wrote (repo root, e.g. `C:\Lab\envlab513\.env`). Make sure the `(.venv)` prefix is still in your prompt before running `server.py`.
+
 ### Flow diagram
 
 ```mermaid
