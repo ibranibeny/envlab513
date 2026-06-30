@@ -222,3 +222,97 @@ SELECT
 ```
 
 Try other questions by changing `@user_question` — e.g. `N'How do I track my order?'` or `N'Can I pay using cryptocurrency?'` (the latter should answer *I do not know*, demonstrating RAG grounding).
+
+## Exercise 4 — Orchestrate with a Foundry Agent + local MCP server
+
+Exercise 4 doesn't add SQL. It runs a **local MCP server** (`labfiles/sql_mcp_server/server.py`) that wraps `dbo.SearchFAQ`, then lets a **Microsoft Foundry agent** call it as a tool. Because the agent runs in Azure but the MCP server runs on your VM (`http://0.0.0.0:8000/mcp`), you need a way for the cloud agent to reach a *local* endpoint — that's what **dev tunnel** does.
+
+### What is `devtunnel`?
+
+`devtunnel` (Microsoft Dev Tunnels) creates a **secure public HTTPS URL** that forwards traffic to a port on your local machine. No firewall change, no public IP, no inbound NSG rule — the tunnel makes an **outbound** connection to the Dev Tunnels service, which then relays requests back to your `localhost:8000`.
+
+| Without devtunnel | With devtunnel |
+|---|---|
+| Foundry (cloud) cannot reach `http://0.0.0.0:8000` on your VM | Foundry calls `https://<name>.devtunnels.ms` → relayed to your local `:8000` |
+| Would need a public IP + open inbound port 8000 (insecure) | Outbound-only, HTTPS, optional auth |
+
+Commands (Exercise 4, Task 2):
+
+```powershell
+devtunnel user login
+devtunnel create my-faq-tunnel<LAB_INSTANCE_ID> --allow-anonymous
+devtunnel port create my-faq-tunnel<LAB_INSTANCE_ID> -p 8000 --protocol http
+devtunnel host my-faq-tunnel<LAB_INSTANCE_ID>
+```
+
+Copy the printed `https://<name>.devtunnels.ms` URL — you paste it into Foundry as the **Remote MCP Server endpoint** (Authentication = *Unauthenticated*, matching `--allow-anonymous`).
+
+### Run the MCP server (Task 1) — the missing steps
+
+`.venv\Scripts\Activate.ps1` is **generated** by `python -m venv` (it is not shipped). And `server.py` reads SQL settings from a sibling `.env`, which `deploy.sh` writes to the repo root — so copy it in first:
+
+```powershell
+cd C:\LabFiles\sql_mcp_server
+
+# 1) Provide DB connection settings (server.py loads ./.env)
+copy C:\LabFiles\.env .env        # or: copy .env.example .env  (then fill SQL_FQDN / SQL_ADMIN / SQL_PASSWORD)
+
+# 2) Create + activate the virtual environment (this is what creates Activate.ps1)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# 3) Install deps and start the server
+pip install -r requirements.txt
+python server.py
+```
+
+Expected banner (keep this terminal running):
+
+```
+[MCP] Starting FAQ SQL Assistant on http://0.0.0.0:8000
+[MCP] MCP endpoint : http://0.0.0.0:8000/mcp
+```
+
+> Note: this layer (MCP server → SQL) uses **SQL auth** (Uid/Pwd from `.env`), as in the official lab. The token/Managed-Identity auth applies to the **SQL → AI Foundry** calls in Exercises 2 & 3.
+
+### Flow diagram
+
+```mermaid
+flowchart LR
+    User([User question]):::user --> Agent
+
+    subgraph Cloud["☁️ Azure (Microsoft Foundry)"]
+        Agent[faq-orchestrator-agent<br/>GPT-4o]:::agent
+    end
+
+    subgraph Tunnel["🔒 Dev Tunnels service"]
+        DT[[https://name.devtunnels.ms]]:::tunnel
+    end
+
+    subgraph VM["🖥️ Lab VM (localhost:8000)"]
+        MCP[MCP server<br/>server.py /mcp]:::mcp
+    end
+
+    subgraph DB["🗄️ Azure SQL Hyperscale"]
+        Proc[dbo.SearchFAQ<br/>vector search]:::sql
+        Foundry2[(AI Foundry<br/>text-embedding-3-small)]:::embed
+    end
+
+    Agent -- "1 MCP tool call (HTTPS)" --> DT
+    DT -- "2 relay to local :8000" --> MCP
+    MCP -- "3 EXEC dbo.SearchFAQ" --> Proc
+    Proc -- "embed query (token/MI)" --> Foundry2
+    Proc -- "4 top FAQ rows" --> MCP
+    MCP -- "5 tool result" --> DT
+    DT --> Agent
+    Agent -- "6 grounded answer" --> User
+
+    classDef user fill:#0078D4,stroke:#003366,color:#fff;
+    classDef agent fill:#8661C5,stroke:#3B2E58,color:#fff;
+    classDef tunnel fill:#107C10,stroke:#0B520B,color:#fff;
+    classDef mcp fill:#D83B01,stroke:#7A2200,color:#fff;
+    classDef sql fill:#005BA1,stroke:#002B4D,color:#fff;
+    classDef embed fill:#C19C00,stroke:#6E5900,color:#fff;
+```
+
+The agent **decides** when to call the tool, retrieves FAQ rows from SQL, and grounds its answer — if nothing relevant comes back (e.g. *"Can I pay using cryptocurrency?"*) it replies *"I do not know based on the available FAQ content."*
