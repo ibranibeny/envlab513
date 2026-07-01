@@ -139,6 +139,20 @@ This environment's AI account has **local (key) auth disabled** (`disableLocalAu
 | Embeddings / `AI_GENERATE_EMBEDDINGS` | api-key in DSC `SECRET` | DSC `IDENTITY='Managed Identity', SECRET='{"resourceid":"https://cognitiveservices.azure.com"}'` + `CREATE EXTERNAL MODEL` — `sql/05_external_model.sql` |
 | Exercise 3 RAG → GPT-4o | `@headers = N'{"api-key":"<KEY>"}'` | `@credential = [https://<ai-account>.cognitiveservices.azure.com]` (no key) — `sql/06_rag_chat.sql` |
 
+### Exercise 2 Task 2 — semantic-search query
+
+Generate an embedding for the user's question with the token/MI **EXTERNAL MODEL** (`text-embedding-3-small`, created by `sql/05_external_model.sql`) and rank the FAQ by cosine distance:
+
+```sql
+DECLARE @q NVARCHAR(MAX) = N'My product arrived damaged';
+DECLARE @qv VECTOR(1536) = AI_GENERATE_EMBEDDINGS(@q USE MODEL [text-embedding-3-small]);
+
+SELECT TOP(3) c.faq_id, c.category, c.question, c.answer
+FROM dbo.FAQ_Content c
+JOIN dbo.FAQ_Embeddings e ON e.faq_id = c.faq_id
+ORDER BY VECTOR_DISTANCE('cosine', @qv, e.question_embedding) ASC;
+```
+
 **Exercise 3 (RAG) — run manually** in the mssql extension or portal Query editor. The key change in the `sp_invoke_external_rest_endpoint` call:
 
 ```sql
