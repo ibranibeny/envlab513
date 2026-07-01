@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab513 Cost Calculator</title>
+<title>Lab513 Cost Calculator (incl. Fabric F2)</title>
 <style>
 :root {
   --primary: #1F4E79;
@@ -52,7 +52,7 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
 <body>
 <div class="container">
   <h1>Lab513 Azure Cost Calculator</h1>
-  <p class="subtitle">Interactive per-hour cost estimation — Subscription: ME-MngEnvMCAP708029 | Instance: 2139d8</p>
+  <p class="subtitle">Interactive per-hour cost estimation (incl. Fabric F2) — Subscription: ME-MngEnvMCAP708029 | Instance: 2139d8</p>
 
   <div class="card">
     <h2>Simulation Parameters</h2>
@@ -84,6 +84,10 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
       <div class="slider-label"><span>Embedding calls</span><span class="slider-value" id="v-embeds">100</span></div>
       <input type="range" id="s-embeds" min="0" max="1000" value="100" step="10" oninput="update()">
     </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Fabric F2 Capacity (active)</span><span class="slider-value" id="v-fabric">ON</span></div>
+      <input type="range" id="s-fabric" min="0" max="1" value="1" step="1" oninput="update()">
+    </div>
   </div>
 
   <div class="card">
@@ -103,12 +107,14 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
     <div class="summary-box"><div class="label">Total Cost</div><div class="value" id="sum-total">-</div></div>
     <div class="summary-box"><div class="label">Per Hour</div><div class="value" id="sum-perhour">-</div></div>
     <div class="summary-box"><div class="label">Monthly (730hr)</div><div class="value" id="sum-monthly">-</div></div>
+    <div class="summary-box"><div class="label">Fabric F2</div><div class="value" id="sum-fabric">-</div></div>
     <div class="summary-box"><div class="label">AI Token Cost</div><div class="value" id="sum-ai">-</div></div>
   </div>
 
   <div class="info">
     <strong>Data Source:</strong> Azure Retail Prices API (prices.azure.com) — Queried 2025-07-16<br>
-    <strong>Region:</strong> indonesiacentral (VM/SQL), eastus2 (AI Services)<br>
+    <strong>Region:</strong> indonesiacentral (VM/SQL/Fabric), eastus2 (AI Services)<br>
+    <strong>Fabric:</strong> F2 = 2 CUs × $0.19/CU/hr = $0.38/hr (Mirrored DB, SQL Endpoint, Semantic Model, Power BI included)<br>
     <strong>Note:</strong> GPT-5 pricing estimated from gpt-4o-1120 GlobalStandard rates (model not yet in retail API)
   </div>
 </div>
@@ -119,12 +125,13 @@ const RATES = {
   disk: 5.89 / 730,
   sqlPerVcore: 0.6849,
   sqlStoragePerGB: 0.108 / 730,
+  fabricF2: 0.38,
   gpt5In: 0.0025,
   gpt5Out: 0.01,
   embed: 0.000025
 };
 
-const COLORS = ['#1F4E79','#2E86AB','#A23B72','#F18F01','#C73E1D','#3B1F2B','#44AF69'];
+const COLORS = ['#1F4E79','#2E86AB','#A23B72','#2D936C','#F18F01','#C73E1D','#3B1F2B','#44AF69'];
 
 function update() {
   const hours = +document.getElementById('s-hours').value;
@@ -134,6 +141,7 @@ function update() {
   const inTokens = +document.getElementById('s-intokens').value;
   const outTokens = +document.getElementById('s-outtokens').value;
   const embeds = +document.getElementById('s-embeds').value;
+  const fabricOn = +document.getElementById('s-fabric').value;
 
   document.getElementById('v-hours').textContent = hours;
   document.getElementById('v-vcores').textContent = vcores.toFixed(1);
@@ -142,19 +150,22 @@ function update() {
   document.getElementById('v-intokens').textContent = inTokens;
   document.getElementById('v-outtokens').textContent = outTokens;
   document.getElementById('v-embeds').textContent = embeds;
+  document.getElementById('v-fabric').textContent = fabricOn ? 'ON' : 'OFF';
 
   const costs = [
     { name: 'VM Compute (D2s_v5)', rate: `$${RATES.vm.toFixed(3)}/hr`, cost: hours * RATES.vm },
     { name: 'OS Disk (S10 128GB)', rate: `$${(RATES.disk).toFixed(5)}/hr`, cost: hours * RATES.disk },
     { name: 'SQL Compute (Gen5)', rate: `${vcores} vCore × $${RATES.sqlPerVcore}/hr`, cost: hours * vcores * RATES.sqlPerVcore },
     { name: 'SQL Storage', rate: `${storage}GB × $${(RATES.sqlStoragePerGB*730).toFixed(3)}/GB/mo`, cost: hours * storage * RATES.sqlStoragePerGB },
+    { name: 'Fabric F2 (2 CUs)', rate: `$${RATES.fabricF2}/hr × ${fabricOn ? 'ON':'OFF'}`, cost: fabricOn ? hours * RATES.fabricF2 : 0 },
     { name: 'GPT-5 Input', rate: `${chats}×${inTokens}tok × $${RATES.gpt5In}/1K`, cost: chats * inTokens / 1000 * RATES.gpt5In },
     { name: 'GPT-5 Output', rate: `${chats}×${outTokens}tok × $${RATES.gpt5Out}/1K`, cost: chats * outTokens / 1000 * RATES.gpt5Out },
     { name: 'Embedding', rate: `${embeds}×200tok × $${RATES.embed}/1K`, cost: embeds * 200 / 1000 * RATES.embed }
   ];
 
   const total = costs.reduce((s, c) => s + c.cost, 0);
-  const aiCost = costs[4].cost + costs[5].cost + costs[6].cost;
+  const aiCost = costs[5].cost + costs[6].cost + costs[7].cost;
+  const fabricCost = costs[4].cost;
   const maxCost = Math.max(...costs.map(c => c.cost));
 
   // Table
@@ -181,6 +192,7 @@ function update() {
   document.getElementById('sum-total').textContent = '$' + total.toFixed(2);
   document.getElementById('sum-perhour').textContent = '$' + (total / hours).toFixed(3);
   document.getElementById('sum-monthly').textContent = '$' + (total / hours * 730).toFixed(0);
+  document.getElementById('sum-fabric').textContent = '$' + fabricCost.toFixed(2);
   document.getElementById('sum-ai').textContent = '$' + aiCost.toFixed(4);
 }
 
