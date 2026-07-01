@@ -1,0 +1,42 @@
+Resource,SKU,Region,PricingModel,UnitPrice_USD,Unit,HourlyRate_USD,MonthlyRate_USD,Notes
+VM Compute,Standard_D2s_v5 Windows,indonesiacentral,Consumption,0.200,1 Hour,0.200000,146.000000,Pay-as-you-go; 2 vCPU 8GB RAM
+VM OS Disk,Standard HDD S10 128GB LRS,indonesiacentral,Consumption,5.890,1 Month,0.008068,5.890000,Standard_LRS; 127GB actual
+SQL Compute (max 2 vCore),HS_S_Gen5_2 Serverless,indonesiacentral,Consumption,0.6849,1 vCore/Hour,1.369800,999.954000,Max usage: 2 vCores × $0.6849/vCore/hr
+SQL Compute (min 0.5 vCore),HS_S_Gen5_2 Serverless,indonesiacentral,Consumption,0.6849,1 vCore/Hour,0.342450,249.988500,Min usage: 0.5 vCore × $0.6849/vCore/hr
+SQL Compute (avg 1 vCore),HS_S_Gen5_2 Serverless,indonesiacentral,Consumption,0.6849,1 vCore/Hour,0.684900,499.977000,Typical idle: ~1 vCore average
+SQL Storage (10GB),Hyperscale Data Stored,indonesiacentral,Consumption,0.108,1 GB/Month,0.001479,1.080000,10GB included; $0.108/GB/month
+SQL Backup (10GB LRS),Hyperscale Backup LRS,indonesiacentral,Consumption,0.0864,1 GB/Month,0.001183,0.864000,Auto backup; $0.0864/GB/month
+AI Services Account,S0,eastus2,Free,0.000,Base,0.000000,0.000000,No base charge; pay per API call
+GPT-5 Input Tokens,GlobalStandard cap-20,eastus2,Per Token,0.0025,1K tokens,variable,variable,Est. ~gpt-4o-1120 global rate; actual depends on usage
+GPT-5 Output Tokens,GlobalStandard cap-20,eastus2,Per Token,0.0100,1K tokens,variable,variable,Est. ~gpt-4o-1120 global rate; actual depends on usage
+text-embedding-3-small,GlobalStandard cap-50,eastus2,Per Token,0.000025,1K tokens,variable,variable,Confirmed from Azure Retail Prices API
+VNet,vnet-lab513-2139d8,indonesiacentral,Free,0.000,N/A,0.000000,0.000000,No charge for VNet resource
+NSG,nsg-lab513-2139d8,indonesiacentral,Free,0.000,N/A,0.000000,0.000000,No charge for NSG resource
+AI Foundry Project,FAQ-Assistant-project,eastus2,Free,0.000,N/A,0.000000,0.000000,No separate charge; included in AI Services
+,,,,,,,,
+SUMMARY - FIXED COSTS PER HOUR,,,,,,,,
+VM + Disk (always-on),,,,,,0.208068,,VM running + OS disk
+SQL Serverless (idle min),,,,,,0.342450,,0.5 vCore minimum when paused/idle
+SQL Serverless (typical avg),,,,,,0.684900,,~1 vCore average workload
+SQL Serverless (peak max),,,,,,1.369800,,2 vCores fully utilized
+SQL Storage + Backup,,,,,,0.002662,,10GB data + 10GB backup
+,,,,,,,,
+TOTAL HOURLY (idle/min),,,,,,$0.553180,,VM + disk + SQL min + storage
+TOTAL HOURLY (typical),,,,,,$0.895630,,VM + disk + SQL avg + storage
+TOTAL HOURLY (peak),,,,,,$1.580530,,VM + disk + SQL max + storage
+,,,,,,,,
+TOTAL MONTHLY (idle/min),,,,,,$403.82,,730 hrs × $0.553180
+TOTAL MONTHLY (typical),,,,,,$653.81,,730 hrs × $0.895630
+TOTAL MONTHLY (peak),,,,,,$1153.79,,730 hrs × $1.580530
+,,,,,,,,
+AI TOKEN COST ESTIMATE (per 1000 chat interactions),,,,,,,,
+Assumption: avg 500 input tokens + 300 output tokens per chat,,,,,,,,
+GPT-5 Input (500K tokens),,,,,,,$1.250,500 × $0.0025
+GPT-5 Output (300K tokens),,,,,,,$3.000,300 × $0.0100
+Embedding (500K tokens),,,,,,,$0.013,500 × $0.000025
+Total per 1000 chats,,,,,,,$4.263,
+,,,,,,,,
+DATA SOURCE,,,,,,,,"Azure Retail Prices API (https://prices.azure.com/api/retail/prices)"
+QUERY DATE,,,,,,,,2025-07-16
+SUBSCRIPTION,,,,,,,,ME-MngEnvMCAP708029-benyibrani-1
+LAB_INSTANCE_ID,,,,,,,,2139d8
