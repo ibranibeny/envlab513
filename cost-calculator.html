@@ -93,7 +93,7 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
   <div class="card">
     <h2>Cost Breakdown</h2>
     <table class="cost-table">
-      <thead><tr><th>Component</th><th>Rate</th><th style="text-align:right">Cost (USD)</th></tr></thead>
+      <thead><tr><th>Component</th><th>Region</th><th>Rate</th><th style="text-align:right">Cost (USD)</th></tr></thead>
       <tbody id="cost-body"></tbody>
     </table>
   </div>
@@ -104,18 +104,23 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
   </div>
 
   <div class="summary-grid">
-    <div class="summary-box"><div class="label">Total Cost</div><div class="value" id="sum-total">-</div></div>
-    <div class="summary-box"><div class="label">Per Hour</div><div class="value" id="sum-perhour">-</div></div>
+    <div class="summary-box"><div class="label"><span id="sum-total-label">Total (8 hrs)</span></div><div class="value" id="sum-total">-</div></div>
+    <div class="summary-box"><div class="label">Per Hour (avg)</div><div class="value" id="sum-perhour">-</div></div>
     <div class="summary-box"><div class="label">Monthly (730hr)</div><div class="value" id="sum-monthly">-</div></div>
     <div class="summary-box"><div class="label">Fabric F2</div><div class="value" id="sum-fabric">-</div></div>
     <div class="summary-box"><div class="label">AI Token Cost</div><div class="value" id="sum-ai">-</div></div>
   </div>
 
   <div class="info">
-    <strong>Data Source:</strong> Azure Retail Prices API (prices.azure.com) — Queried 2025-07-16<br>
-    <strong>Region:</strong> indonesiacentral (VM/SQL/Fabric), eastus2 (AI Services)<br>
-    <strong>Fabric:</strong> F2 = 2 CUs × $0.19/CU/hr = $0.38/hr (Mirrored DB, SQL Endpoint, Semantic Model, Power BI included)<br>
-    <strong>Note:</strong> GPT-5 pricing estimated from gpt-4o-1120 GlobalStandard rates (model not yet in retail API)
+    <strong>DISCLAIMER:</strong> Harga diperoleh melalui <strong>Azure Retail Prices API</strong> (<a href="https://prices.azure.com/api/retail/prices" target="_blank">prices.azure.com</a>). Harga dapat berubah sewaktu-waktu — periksa Azure Portal untuk harga terkini.<br><br>
+    <strong>Regions:</strong><br>
+    • <code>indonesiacentral</code> — VM (D2s_v5), OS Disk, SQL Hyperscale Serverless, Fabric F2, VNet, NSG<br>
+    • <code>eastus2</code> — AI Foundry, GPT-5, text-embedding-3-small<br><br>
+    <strong>Notes:</strong><br>
+    • VM D2s_v5 Windows $0.200/hr <strong>sudah termasuk lisensi Windows Server</strong><br>
+    • Fabric F2 = 2 CUs × $0.19/CU/hr (Mirrored DB, SQL Endpoint, Semantic Model, Power BI included)<br>
+    • GPT-5 pricing: estimasi dari gpt-4o-1120 GlobalStandard (model belum tersedia di retail API)<br>
+    • <strong>Total Cost</strong> = jumlah biaya selama durasi yang dipilih. <strong>Per Hour</strong> = Total ÷ durasi
   </div>
 </div>
 
@@ -153,14 +158,14 @@ function update() {
   document.getElementById('v-fabric').textContent = fabricOn ? 'ON' : 'OFF';
 
   const costs = [
-    { name: 'VM Compute (D2s_v5)', rate: `$${RATES.vm.toFixed(3)}/hr`, cost: hours * RATES.vm },
-    { name: 'OS Disk (S10 128GB)', rate: `$${(RATES.disk).toFixed(5)}/hr`, cost: hours * RATES.disk },
-    { name: 'SQL Compute (Gen5)', rate: `${vcores} vCore × $${RATES.sqlPerVcore}/hr`, cost: hours * vcores * RATES.sqlPerVcore },
-    { name: 'SQL Storage', rate: `${storage}GB × $${(RATES.sqlStoragePerGB*730).toFixed(3)}/GB/mo`, cost: hours * storage * RATES.sqlStoragePerGB },
-    { name: 'Fabric F2 (2 CUs)', rate: `$${RATES.fabricF2}/hr × ${fabricOn ? 'ON':'OFF'}`, cost: fabricOn ? hours * RATES.fabricF2 : 0 },
-    { name: 'GPT-5 Input', rate: `${chats}×${inTokens}tok × $${RATES.gpt5In}/1K`, cost: chats * inTokens / 1000 * RATES.gpt5In },
-    { name: 'GPT-5 Output', rate: `${chats}×${outTokens}tok × $${RATES.gpt5Out}/1K`, cost: chats * outTokens / 1000 * RATES.gpt5Out },
-    { name: 'Embedding', rate: `${embeds}×200tok × $${RATES.embed}/1K`, cost: embeds * 200 / 1000 * RATES.embed }
+    { name: 'VM Compute (D2s_v5)', region: 'indonesiacentral', rate: `$${RATES.vm.toFixed(3)}/hr`, cost: hours * RATES.vm },
+    { name: 'OS Disk (S10 128GB)', region: 'indonesiacentral', rate: `$${(RATES.disk).toFixed(5)}/hr`, cost: hours * RATES.disk },
+    { name: 'SQL Compute (Gen5)', region: 'indonesiacentral', rate: `${vcores} vCore × $${RATES.sqlPerVcore}/hr`, cost: hours * vcores * RATES.sqlPerVcore },
+    { name: 'SQL Storage', region: 'indonesiacentral', rate: `${storage}GB × $${(RATES.sqlStoragePerGB*730).toFixed(3)}/GB/mo`, cost: hours * storage * RATES.sqlStoragePerGB },
+    { name: 'Fabric F2 (2 CUs)', region: 'indonesiacentral', rate: `$${RATES.fabricF2}/hr × ${fabricOn ? 'ON':'OFF'}`, cost: fabricOn ? hours * RATES.fabricF2 : 0 },
+    { name: 'GPT-5 Input', region: 'eastus2', rate: `${chats}×${inTokens}tok × $${RATES.gpt5In}/1K`, cost: chats * inTokens / 1000 * RATES.gpt5In },
+    { name: 'GPT-5 Output', region: 'eastus2', rate: `${chats}×${outTokens}tok × $${RATES.gpt5Out}/1K`, cost: chats * outTokens / 1000 * RATES.gpt5Out },
+    { name: 'Embedding', region: 'eastus2', rate: `${embeds}×200tok × $${RATES.embed}/1K`, cost: embeds * 200 / 1000 * RATES.embed }
   ];
 
   const total = costs.reduce((s, c) => s + c.cost, 0);
@@ -171,9 +176,9 @@ function update() {
   // Table
   let html = '';
   costs.forEach(c => {
-    html += `<tr><td>${c.name}</td><td>${c.rate}</td><td class="cost-col">$${c.cost.toFixed(4)}</td></tr>`;
+    html += `<tr><td>${c.name}</td><td style="font-size:0.8em;color:#666">${c.region}</td><td>${c.rate}</td><td class="cost-col">$${c.cost.toFixed(4)}</td></tr>`;
   });
-  html += `<tr class="total-row"><td>TOTAL</td><td></td><td class="cost-col">$${total.toFixed(4)}</td></tr>`;
+  html += `<tr class="total-row"><td>TOTAL (${hours} hrs)</td><td></td><td></td><td class="cost-col">$${total.toFixed(4)}</td></tr>`;
   document.getElementById('cost-body').innerHTML = html;
 
   // Bar chart
@@ -189,6 +194,7 @@ function update() {
   document.getElementById('bar-chart').innerHTML = bars;
 
   // Summary
+  document.getElementById('sum-total-label').textContent = `Total (${hours} hrs)`;
   document.getElementById('sum-total').textContent = '$' + total.toFixed(2);
   document.getElementById('sum-perhour').textContent = '$' + (total / hours).toFixed(3);
   document.getElementById('sum-monthly').textContent = '$' + (total / hours * 730).toFixed(0);
