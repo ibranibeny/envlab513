@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab513 - AI App with Azure SQL Hyperscale, Fabric & Foundry</title>
+<style>
+:root { --primary: #1F4E79; --accent: #2E86AB; --bg: #F0F4F8; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #1a1a2e; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.container { max-width: 700px; width: 90%; }
+.header { text-align: center; margin-bottom: 32px; }
+.header h1 { color: var(--primary); font-size: 1.8em; margin-bottom: 8px; }
+.header p { color: #6c757d; font-size: 0.95em; }
+.card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: transform 0.2s; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+.card h2 { color: var(--primary); font-size: 1.1em; margin-bottom: 8px; }
+.card p { color: #555; font-size: 0.9em; margin-bottom: 12px; }
+.card a { display: inline-block; background: var(--accent); color: white; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9em; }
+.card a:hover { background: var(--primary); }
+.badge { display: inline-block; background: #e2efda; color: #2d6a4f; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 600; margin-left: 8px; }
+.footer { text-align: center; margin-top: 24px; color: #999; font-size: 0.8em; }
+.footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Lab513</h1>
+    <p>Build an AI App with Azure SQL Hyperscale, Microsoft Fabric & Foundry</p>
+  </div>
+
+  <div class="card">
+    <h2>Cost Calculator <span class="badge">Interactive</span></h2>
+    <p>Per-hour cost estimation with sliders for VM, SQL Serverless, Fabric F2, and AI tokens. Adjust parameters to see real-time cost impact.</p>
+    <a href="cost-calculator.html">Open Calculator →</a>
+  </div>
+
+  <div class="card">
+    <h2>Lab Resources</h2>
+    <p>Deployed Azure resources: VM (D2s_v5), SQL Hyperscale Serverless, AI Foundry (GPT-5), Fabric F2 capacity with Mirrored DB and Power BI.</p>
+    <a href="https://github.com/ibranibeny/envlab513">View Repository →</a>
+  </div>
+
+  <div class="card">
+    <h2>Lab Instructions</h2>
+    <p>Full workshop exercises: AI-enhanced querying, Copilot SQL, semantic search, Foundry agents, Fabric mirroring, and MCP integration.</p>
+    <a href="https://github.com/microsoft/Build26-LAB513-build-an-ai-app-with-azure-sql-hyperscale-microsoft-fabric-foundry/tree/main/docs/Lab/Instructions">View Instructions →</a>
+  </div>
+
+  <div class="footer">
+    <p>Instance: 2139d8 | Subscription: ME-MngEnvMCAP708029 | <a href="https://github.com/ibranibeny/envlab513">GitHub</a></p>
+  </div>
+</div>
+</body>
+</html>
