@@ -59,7 +59,9 @@ SET @prompt =
 
 DROP TABLE #searchResults;
 
-/* ---------- Task 2: send the prompt to GPT-4o using a TOKEN (Managed Identity) ---------- */
+/* ---------- Task 2: send the prompt to gpt-5 using a TOKEN (Managed Identity) ---------- */
+-- NOTE: gpt-5 is a reasoning model and only supports the default temperature (1);
+-- sending "temperature":0 returns HTTP 400 unsupported_value, so it is omitted.
 DECLARE @payload  NVARCHAR(MAX);
 DECLARE @response NVARCHAR(MAX);
 
@@ -67,7 +69,7 @@ SET @payload =
     N'{"messages":[' +
     N'{"role":"system","content":"You are a helpful assistant that answers questions by using only approved FAQ context."},' +
     N'{"role":"user","content":"' + STRING_ESCAPE(@prompt, 'json') + N'"}' +
-    N'],"temperature":0}';
+    N']}';
 
 EXEC sp_invoke_external_rest_endpoint
     @method     = 'POST',

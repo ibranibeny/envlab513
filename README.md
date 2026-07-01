@@ -16,7 +16,7 @@ flowchart LR
     end
     subgraph EXERCISES["📘 Exercises (00–05)"]
         direction TB
-        E["00 · Readiness ✅"]:::ex --> F["01 · Schema + embeddings + SearchFAQ ✅"]:::ex --> G["02 · Copilot semantic search ✅"]:::ex --> H["03 · RAG → GPT-4o ✅"]:::ex --> I["04 · Foundry agent + MCP ✅"]:::ex --> J["05 · Fabric (manual)"]:::manual
+        E["00 · Readiness ✅"]:::ex --> F["01 · Schema + embeddings + SearchFAQ ✅"]:::ex --> G["02 · Copilot semantic search ✅"]:::ex --> H["03 · RAG → gpt-5 ✅"]:::ex --> I["04 · Foundry agent + MCP ✅"]:::ex --> J["05 · Fabric (manual)"]:::manual
     end
     subgraph WRAP["🧹 Wrap-up"]
         direction TB
@@ -39,7 +39,7 @@ flowchart LR
 | 4 | **Exercise 00** — verify environment readiness | [§Exercise-00 readiness](#exercise-00-readiness) |
 | 5 | **Exercise 01** — schema, embeddings, `dbo.SearchFAQ` (run by `deploy.sh`) | `sql/01..04_*.sql` |
 | 6 | **Exercise 02** — Copilot semantic-search query (token/MI) | [§Exercise 2 & 3 — token auth](#exercise-2--3--token-auth-instead-of-api-key-workshop-note) · `sql/05_external_model.sql` |
-| 7 | **Exercise 03** — RAG grounded prompt → GPT-4o (run manually) | [§Complete runnable script — Exercise 3 Task 2](#complete-runnable-script--exercise-3-task-2-token-auth) · `sql/06_rag_chat.sql` |
+| 7 | **Exercise 03** — RAG grounded prompt → gpt-5 (run manually) | [§Complete runnable script — Exercise 3 Task 2](#complete-runnable-script--exercise-3-task-2-token-auth) · `sql/06_rag_chat.sql` |
 | 8 | **Exercise 04** — Foundry agent + local MCP tool over dev tunnel | [§Exercise 4](#exercise-4--orchestrate-with-a-foundry-agent--local-mcp-server) |
 | 9 | **Exercise 05** — Microsoft Fabric (interactive, portal) | `REPORT.md` §9 |
 | 10 | Tear down to stop cost | [§Provision (deploy.sh)](#provision-deploysh) · `scripts/teardown.sh` |
@@ -54,7 +54,7 @@ flowchart LR
 | `scripts/create-vm.ps1` | Create lab VM and run `install-tools.ps1` |
 | `sql/01..04_*.sql` | FAQ schema, seed, embeddings, `dbo.SearchFAQ` |
 | `sql/05_external_model.sql` | EXTERNAL MODEL for `AI_GENERATE_EMBEDDINGS` (Exercise 2) — token/MI |
-| `sql/06_rag_chat.sql` | Exercise 3 (RAG): grounded prompt → GPT-4o — **token/MI, run manually** |
+| `sql/06_rag_chat.sql` | Exercise 3 (RAG): grounded prompt → gpt-5 — **token/MI, run manually** |
 | `labfiles/sql_mcp_server/` | MCP server (`server.py`, `requirements.txt`) → staged to `C:\LabFiles` |
 | `labfiles/sql-mcp-lab/` | DAB config + VS Code MCP wiring → staged to `C:\LabFiles` |
 | `REPORT.md` | Honest as-built report (regions, security, cost) |
@@ -92,7 +92,7 @@ Before you run anything, make sure the host (lab VM or your machine) has:
 |---|---|---|
 | Resource group + VNet / Subnet / NSG | lab networking | `indonesiacentral` |
 | Azure SQL logical server + **Hyperscale** DB | Serverless, Gen5 2 vCore, system-assigned Managed Identity | `indonesiacentral` |
-| **Azure AI Foundry** + `gpt-4o` + `text-embedding-3-small` + `FAQ-Assistant-project` | token-only auth (`disableLocalAuth=true`) | `southeastasia`/`eastus2` (Azure OpenAI not in Indonesia Central) |
+| **Azure AI Foundry** + `gpt-5` + `text-embedding-3-small` + `FAQ-Assistant-project` | token-only auth (`disableLocalAuth=true`) | `southeastasia`/`eastus2` (Azure OpenAI not in Indonesia Central) |
 | Microsoft Fabric capacity | F2 (skippable with `--no-fabric`) | `indonesiacentral` (fallback `southeastasia`) |
 
 > Cost note: the **Fabric F2 capacity bills continuously** — run `deploy.sh --no-fabric` or `teardown.sh` when not using Exercise 5.
@@ -137,7 +137,7 @@ This environment's AI account has **local (key) auth disabled** (`disableLocalAu
 | Lab step | Official (api-key) | This repo (token / Managed Identity) |
 |---|---|---|
 | Embeddings / `AI_GENERATE_EMBEDDINGS` | api-key in DSC `SECRET` | DSC `IDENTITY='Managed Identity', SECRET='{"resourceid":"https://cognitiveservices.azure.com"}'` + `CREATE EXTERNAL MODEL` — `sql/05_external_model.sql` |
-| Exercise 3 RAG → GPT-4o | `@headers = N'{"api-key":"<KEY>"}'` | `@credential = [https://<ai-account>.cognitiveservices.azure.com]` (no key) — `sql/06_rag_chat.sql` |
+| Exercise 3 RAG → gpt-5 | `@headers = N'{"api-key":"<KEY>"}'` | `@credential = [https://<ai-account>.cognitiveservices.azure.com]` (no key) — `sql/06_rag_chat.sql` |
 
 ### Exercise 2 Task 2 — semantic-search query
 
@@ -158,7 +158,7 @@ ORDER BY VECTOR_DISTANCE('cosine', @qv, e.question_embedding) ASC;
 ```sql
 EXEC sp_invoke_external_rest_endpoint
     @method     = 'POST',
-    @url        = N'https://<ai-account>.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21',
+    @url        = N'https://<ai-account>.cognitiveservices.azure.com/openai/deployments/gpt-5/chat/completions?api-version=2025-04-01-preview',
     @headers    = N'{"Content-Type":"application/json"}',   -- NO api-key here
     @credential = [https://<ai-account>.cognitiveservices.azure.com],  -- TOKEN (Managed Identity)
     @payload    = @payload,
@@ -187,7 +187,7 @@ Becomes this **token** version — concrete values for the **current deployment*
 DECLARE @headers NVARCHAR(MAX) = N'{"Content-Type":"application/json"}';   -- no api-key
 EXEC sp_invoke_external_rest_endpoint
     @method     = 'POST',
-    @url        = N'https://aif-lab513-2139d8.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21',
+    @url        = N'https://aif-lab513-2139d8.cognitiveservices.azure.com/openai/deployments/gpt-5/chat/completions?api-version=2025-04-01-preview',
     @headers    = @headers,
     @credential = [https://aif-lab513-2139d8.cognitiveservices.azure.com],   -- TOKEN (Managed Identity)
     @payload    = @payload,
@@ -253,13 +253,12 @@ SET @payload = N'{' +
 N'"messages":[' +
 N'{"role":"system","content":"You are a helpful assistant that answers questions by using only approved FAQ context."},' +
 N'{"role":"user","content":"' + STRING_ESCAPE(@prompt, 'json') + N'"}' +
-N'],' +
-N'"temperature":0' +
+N']' +
 N'}';
 
 EXEC sp_invoke_external_rest_endpoint
     @method     = 'POST',
-    @url        = N'https://aif-lab513-2139d8.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21',
+    @url        = N'https://aif-lab513-2139d8.cognitiveservices.azure.com/openai/deployments/gpt-5/chat/completions?api-version=2025-04-01-preview',
     @headers    = @headers,
     @credential = [https://aif-lab513-2139d8.cognitiveservices.azure.com],   -- TOKEN, bukan api-key
     @payload    = @payload,
@@ -400,7 +399,7 @@ flowchart TB
     User([User question]):::user
 
     subgraph Cloud["☁️ Azure — Microsoft Foundry"]
-        Agent["faq-orchestrator-agent · GPT-4o"]:::agent
+        Agent["faq-orchestrator-agent · gpt-5"]:::agent
     end
 
     subgraph Tunnel["🔒 Dev Tunnels service"]

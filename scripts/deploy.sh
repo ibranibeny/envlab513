@@ -11,7 +11,8 @@
 #   - Resource group                         (indonesiacentral)
 #   - VNet + Subnet + NSG (ALL in/out OPEN)  (indonesiacentral)   << lab only
 #   - Azure SQL logical server + Hyperscale db (indonesiacentral)
-#   - Azure AI Foundry (AIServices) + gpt-4o + text-embedding-3-small (southeastasia)
+#   - Azure AI Foundry (AIServices) + gpt-5 + text-embedding-3-small (southeastasia)
+#     + Foundry project FAQ-Assistant-project (pre-provisioned for Exercise 4)
 #   - Microsoft Fabric capacity (F2)         (indonesiacentral, optional)
 #   - SQL bootstrap: tables, FAQ seed, embeddings, dbo.SearchFAQ (optional)
 #
@@ -52,9 +53,9 @@ VM_USER="labadmin"
 VM_SIZE="Standard_D2s_v5"
 VM_IMAGE="MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest"
 
-CHAT_MODEL="gpt-4o";               CHAT_MODEL_VERSION="2024-11-20"
+CHAT_MODEL="gpt-5";               CHAT_MODEL_VERSION="2025-08-07"
 EMBED_MODEL="text-embedding-3-small"; EMBED_MODEL_VERSION="1"
-API_VERSION="2024-10-21"
+API_VERSION="2025-04-01-preview"
 FABRIC_SKU="F2"
 
 # Password protecting the database master key (used to encrypt the DB-scoped
@@ -252,14 +253,16 @@ az cognitiveservices account deployment create -g "$RG" -n "$AIF" \
   --model-format OpenAI --sku-name GlobalStandard --sku-capacity 50 -o none
 ok "Deployed embedding model ${EMBED_MODEL}."
 
-# Foundry project the lab refers to (Exercise 4): FAQ-Assistant-project
+# Foundry project the lab refers to (Exercise 4): FAQ-Assistant-project.
+# Pre-provisioned here so the agent has a project + gpt-5 deployment ready.
+# NOTE: pass the body INLINE (not @file) — Windows az.exe cannot read a WSL
+# path for @file, which silently produced an empty project on earlier runs.
 FOUNDRY_PROJECT="FAQ-Assistant-project"
-mkdir -p "$GEN_DIR"; chmod 700 "$GEN_DIR"
-printf '{"location":"%s","identity":{"type":"SystemAssigned"},"properties":{}}' "$AI_LOCATION" > "${GEN_DIR}/project.json"
 PROJ_URL="https://management.azure.com/subscriptions/${CURRENT_SUB_ID}/resourceGroups/${RG}/providers/Microsoft.CognitiveServices/accounts/${AIF}/projects/${FOUNDRY_PROJECT}?api-version=2025-04-01-preview"
+PROJ_BODY="{\"location\":\"${AI_LOCATION}\",\"identity\":{\"type\":\"SystemAssigned\"},\"properties\":{}}"
 if az rest --method put --url "$PROJ_URL" --headers Content-Type=application/json \
-     --body "@${GEN_DIR}/project.json" -o none 2>/dev/null; then
-  ok "Foundry project ${FOUNDRY_PROJECT} created."
+     --body "$PROJ_BODY" -o none; then
+  ok "Foundry project ${FOUNDRY_PROJECT} created (with gpt-5 available)."
 else
   warn "Could not create Foundry project ${FOUNDRY_PROJECT} via CLI; create it at https://ai.azure.com/"
 fi
@@ -499,7 +502,7 @@ PY
       fi
     fi
     set -e
-    log "Exercise 3 (RAG) script ready to run MANUALLY: ${GEN_DIR}/06_rag_chat.sql (token auth, gpt-4o)."
+    log "Exercise 3 (RAG) script ready to run MANUALLY: ${GEN_DIR}/06_rag_chat.sql (token auth, gpt-5)."
   fi
 fi
 
