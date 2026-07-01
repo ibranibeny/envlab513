@@ -1,5 +1,5 @@
 /* ===========================================================================
-   06_rag_chat.sql  -  Exercise 3 (RAG): send the grounded prompt to GPT-4o.
+   06_rag_chat.sql  -  Exercise 3 (RAG): send the grounded prompt to gpt-5.
 
    WORKSHOP NOTE — TOKEN vs API-KEY
    --------------------------------
@@ -20,9 +20,11 @@
    Run this AFTER the SQL bootstrap (needs dbo.SearchFAQ, the DSC, the master
    key, and the "Cognitive Services OpenAI User" role on the SQL MI).
 
-   Placeholders @@CHAT_URL@@ / @@AI_ACCOUNT_URL@@ are substituted by deploy.sh
-   into .generated/06_rag_chat.sql. Run it manually in the mssql extension or
-   the portal Query editor.
+   The @url / @credential below are PRE-FILLED with concrete values for the
+   current deployment (account aif-lab513-2139d8, model gpt-5). If you redeploy
+   to a different AI account, replace both with your own account URL (the
+   @credential name must equal the account URL WITHOUT a trailing slash and
+   must exist as the Managed-Identity DATABASE SCOPED CREDENTIAL).
    =========================================================================== */
 
 SET NOCOUNT ON;
@@ -73,9 +75,9 @@ SET @payload =
 
 EXEC sp_invoke_external_rest_endpoint
     @method     = 'POST',
-    @url        = N'@@CHAT_URL@@',
+    @url        = N'https://aif-lab513-2139d8.cognitiveservices.azure.com/openai/deployments/gpt-5/chat/completions?api-version=2025-04-01-preview',
     @headers    = N'{"Content-Type":"application/json"}',
-    @credential = [@@AI_ACCOUNT_URL@@],   -- TOKEN (Managed Identity), NOT an api-key
+    @credential = [https://aif-lab513-2139d8.cognitiveservices.azure.com],   -- TOKEN (Managed Identity), NOT an api-key
     @payload    = @payload,
     @response   = @response OUTPUT;
 
