@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab513 Cost Calculator</title>
+<style>
+:root {
+  --primary: #1F4E79;
+  --accent: #2E86AB;
+  --bg: #F0F4F8;
+  --card: #FFFFFF;
+  --text: #1a1a2e;
+  --muted: #6c757d;
+  --success: #28a745;
+  --warning: #ffc107;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+.container { max-width: 900px; margin: 0 auto; }
+h1 { color: var(--primary); margin-bottom: 5px; font-size: 1.6em; }
+.subtitle { color: var(--muted); margin-bottom: 20px; font-size: 0.9em; }
+.card { background: var(--card); border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.card h2 { color: var(--primary); font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid var(--bg); padding-bottom: 8px; }
+.slider-group { margin-bottom: 18px; }
+.slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.slider-label span { font-size: 0.9em; }
+.slider-value { font-weight: 700; color: var(--accent); font-size: 1em; min-width: 60px; text-align: right; }
+input[type="range"] { width: 100%; height: 6px; -webkit-appearance: none; appearance: none; background: #ddd; border-radius: 3px; outline: none; cursor: pointer; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; cursor: pointer; }
+input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: var(--accent); border-radius: 50%; cursor: pointer; border: none; }
+.cost-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+.cost-table th { background: var(--primary); color: white; padding: 10px 12px; text-align: left; }
+.cost-table td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+.cost-table tr:hover { background: #f8f9fa; }
+.cost-table .cost-col { text-align: right; font-family: 'Consolas', monospace; }
+.total-row { background: var(--primary) !important; color: white !important; font-weight: 700; font-size: 1.1em; }
+.total-row td { border: none; padding: 12px; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+.summary-box { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border-radius: 10px; padding: 16px; text-align: center; }
+.summary-box .label { font-size: 0.75em; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; }
+.summary-box .value { font-size: 1.5em; font-weight: 700; margin-top: 4px; }
+.bar-chart { margin-top: 16px; }
+.bar-row { display: flex; align-items: center; margin-bottom: 8px; }
+.bar-label { width: 140px; font-size: 0.8em; flex-shrink: 0; }
+.bar-container { flex: 1; height: 24px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin: 0 10px; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; display: flex; align-items: center; padding-left: 8px; font-size: 0.75em; color: white; font-weight: 600; }
+.bar-amount { width: 70px; text-align: right; font-size: 0.85em; font-family: monospace; flex-shrink: 0; }
+.info { font-size: 0.8em; color: var(--muted); margin-top: 12px; padding: 10px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Lab513 Azure Cost Calculator</h1>
+  <p class="subtitle">Interactive per-hour cost estimation — Subscription: ME-MngEnvMCAP708029 | Instance: 2139d8</p>
+
+  <div class="card">
+    <h2>Simulation Parameters</h2>
+    <div class="slider-group">
+      <div class="slider-label"><span>Duration (hours)</span><span class="slider-value" id="v-hours">8</span></div>
+      <input type="range" id="s-hours" min="1" max="72" value="8" oninput="update()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>SQL vCore utilization (avg)</span><span class="slider-value" id="v-vcores">1.0</span></div>
+      <input type="range" id="s-vcores" min="5" max="20" value="10" step="1" oninput="update()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>SQL Storage (GB)</span><span class="slider-value" id="v-storage">10</span></div>
+      <input type="range" id="s-storage" min="1" max="100" value="10" oninput="update()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Chat interactions</span><span class="slider-value" id="v-chats">50</span></div>
+      <input type="range" id="s-chats" min="0" max="500" value="50" step="10" oninput="update()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Avg input tokens/chat</span><span class="slider-value" id="v-intokens">500</span></div>
+      <input type="range" id="s-intokens" min="100" max="4000" value="500" step="100" oninput="update()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Avg output tokens/chat</span><span class="slider-value" id="v-outtokens">300</span></div>
+      <input type="range" id="s-outtokens" min="50" max="4000" value="300" step="50" oninput="update()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label"><span>Embedding calls</span><span class="slider-value" id="v-embeds">100</span></div>
+      <input type="range" id="s-embeds" min="0" max="1000" value="100" step="10" oninput="update()">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cost Breakdown</h2>
+    <table class="cost-table">
+      <thead><tr><th>Component</th><th>Rate</th><th style="text-align:right">Cost (USD)</th></tr></thead>
+      <tbody id="cost-body"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Cost Distribution</h2>
+    <div class="bar-chart" id="bar-chart"></div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-box"><div class="label">Total Cost</div><div class="value" id="sum-total">-</div></div>
+    <div class="summary-box"><div class="label">Per Hour</div><div class="value" id="sum-perhour">-</div></div>
+    <div class="summary-box"><div class="label">Monthly (730hr)</div><div class="value" id="sum-monthly">-</div></div>
+    <div class="summary-box"><div class="label">AI Token Cost</div><div class="value" id="sum-ai">-</div></div>
+  </div>
+
+  <div class="info">
+    <strong>Data Source:</strong> Azure Retail Prices API (prices.azure.com) — Queried 2025-07-16<br>
+    <strong>Region:</strong> indonesiacentral (VM/SQL), eastus2 (AI Services)<br>
+    <strong>Note:</strong> GPT-5 pricing estimated from gpt-4o-1120 GlobalStandard rates (model not yet in retail API)
+  </div>
+</div>
+
+<script>
+const RATES = {
+  vm: 0.200,
+  disk: 5.89 / 730,
+  sqlPerVcore: 0.6849,
+  sqlStoragePerGB: 0.108 / 730,
+  gpt5In: 0.0025,
+  gpt5Out: 0.01,
+  embed: 0.000025
+};
+
+const COLORS = ['#1F4E79','#2E86AB','#A23B72','#F18F01','#C73E1D','#3B1F2B','#44AF69'];
+
+function update() {
+  const hours = +document.getElementById('s-hours').value;
+  const vcores = +document.getElementById('s-vcores').value / 10;
+  const storage = +document.getElementById('s-storage').value;
+  const chats = +document.getElementById('s-chats').value;
+  const inTokens = +document.getElementById('s-intokens').value;
+  const outTokens = +document.getElementById('s-outtokens').value;
+  const embeds = +document.getElementById('s-embeds').value;
+
+  document.getElementById('v-hours').textContent = hours;
+  document.getElementById('v-vcores').textContent = vcores.toFixed(1);
+  document.getElementById('v-storage').textContent = storage;
+  document.getElementById('v-chats').textContent = chats;
+  document.getElementById('v-intokens').textContent = inTokens;
+  document.getElementById('v-outtokens').textContent = outTokens;
+  document.getElementById('v-embeds').textContent = embeds;
+
+  const costs = [
+    { name: 'VM Compute (D2s_v5)', rate: `$${RATES.vm.toFixed(3)}/hr`, cost: hours * RATES.vm },
+    { name: 'OS Disk (S10 128GB)', rate: `$${(RATES.disk).toFixed(5)}/hr`, cost: hours * RATES.disk },
+    { name: 'SQL Compute (Gen5)', rate: `${vcores} vCore × $${RATES.sqlPerVcore}/hr`, cost: hours * vcores * RATES.sqlPerVcore },
+    { name: 'SQL Storage', rate: `${storage}GB × $${(RATES.sqlStoragePerGB*730).toFixed(3)}/GB/mo`, cost: hours * storage * RATES.sqlStoragePerGB },
+    { name: 'GPT-5 Input', rate: `${chats}×${inTokens}tok × $${RATES.gpt5In}/1K`, cost: chats * inTokens / 1000 * RATES.gpt5In },
+    { name: 'GPT-5 Output', rate: `${chats}×${outTokens}tok × $${RATES.gpt5Out}/1K`, cost: chats * outTokens / 1000 * RATES.gpt5Out },
+    { name: 'Embedding', rate: `${embeds}×200tok × $${RATES.embed}/1K`, cost: embeds * 200 / 1000 * RATES.embed }
+  ];
+
+  const total = costs.reduce((s, c) => s + c.cost, 0);
+  const aiCost = costs[4].cost + costs[5].cost + costs[6].cost;
+  const maxCost = Math.max(...costs.map(c => c.cost));
+
+  // Table
+  let html = '';
+  costs.forEach(c => {
+    html += `<tr><td>${c.name}</td><td>${c.rate}</td><td class="cost-col">$${c.cost.toFixed(4)}</td></tr>`;
+  });
+  html += `<tr class="total-row"><td>TOTAL</td><td></td><td class="cost-col">$${total.toFixed(4)}</td></tr>`;
+  document.getElementById('cost-body').innerHTML = html;
+
+  // Bar chart
+  let bars = '';
+  costs.forEach((c, i) => {
+    const pct = maxCost > 0 ? (c.cost / maxCost * 100) : 0;
+    bars += `<div class="bar-row">
+      <span class="bar-label">${c.name}</span>
+      <div class="bar-container"><div class="bar-fill" style="width:${pct}%;background:${COLORS[i]}">${pct > 15 ? '$'+c.cost.toFixed(2) : ''}</div></div>
+      <span class="bar-amount">$${c.cost.toFixed(4)}</span>
+    </div>`;
+  });
+  document.getElementById('bar-chart').innerHTML = bars;
+
+  // Summary
+  document.getElementById('sum-total').textContent = '$' + total.toFixed(2);
+  document.getElementById('sum-perhour').textContent = '$' + (total / hours).toFixed(3);
+  document.getElementById('sum-monthly').textContent = '$' + (total / hours * 730).toFixed(0);
+  document.getElementById('sum-ai').textContent = '$' + aiCost.toFixed(4);
+}
+
+update();
+</script>
+</body>
+</html>
