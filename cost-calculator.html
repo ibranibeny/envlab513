@@ -61,8 +61,8 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
       <input type="range" id="s-hours" min="1" max="72" value="8" oninput="update()">
     </div>
     <div class="slider-group">
-      <div class="slider-label"><span>SQL vCore utilization (avg)</span><span class="slider-value" id="v-vcores">1.0</span></div>
-      <input type="range" id="s-vcores" min="5" max="20" value="10" step="1" oninput="update()">
+      <div class="slider-label"><span>SQL Hyperscale Gen5 vCores (HS_S_Gen5_2)</span><span class="slider-value" id="v-vcores">2.0</span></div>
+      <input type="range" id="s-vcores" min="5" max="20" value="20" step="1" oninput="update()">
     </div>
     <div class="slider-group">
       <div class="slider-label"><span>SQL Storage (GB)</span><span class="slider-value" id="v-storage">10</span></div>
@@ -114,7 +114,7 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
   <div class="info">
     <strong>DISCLAIMER:</strong> Harga diperoleh melalui <strong>Azure Retail Prices API</strong> (<a href="https://prices.azure.com/api/retail/prices" target="_blank">prices.azure.com</a>). Harga dapat berubah sewaktu-waktu — periksa Azure Portal untuk harga terkini.<br><br>
     <strong>Regions:</strong><br>
-    • <code>indonesiacentral</code> — VM (D2s_v5), OS Disk, SQL Hyperscale Serverless, Fabric F2, VNet, NSG<br>
+    • <code>indonesiacentral</code> — VM (D2s_v5), OS Disk, SQL Hyperscale Serverless Gen5 2-vCore (HS_S_Gen5_2), Fabric F2, VNet, NSG<br>
     • <code>eastus2</code> — AI Foundry, GPT-5, text-embedding-3-small<br><br>
     <strong>Notes:</strong><br>
     • VM D2s_v5 Windows $0.200/hr <strong>sudah termasuk lisensi Windows Server</strong><br>
@@ -160,7 +160,7 @@ function update() {
   const costs = [
     { name: 'VM Compute (D2s_v5)', region: 'indonesiacentral', rate: `$${RATES.vm.toFixed(3)}/hr`, cost: hours * RATES.vm },
     { name: 'OS Disk (S10 128GB)', region: 'indonesiacentral', rate: `$${(RATES.disk).toFixed(5)}/hr`, cost: hours * RATES.disk },
-    { name: 'SQL Compute (Gen5)', region: 'indonesiacentral', rate: `${vcores} vCore × $${RATES.sqlPerVcore}/hr`, cost: hours * vcores * RATES.sqlPerVcore },
+    { name: 'SQL Hyperscale Gen5 (HS_S_Gen5_2)', region: 'indonesiacentral', rate: `${vcores} vCore × $${RATES.sqlPerVcore}/hr`, cost: hours * vcores * RATES.sqlPerVcore },
     { name: 'SQL Storage', region: 'indonesiacentral', rate: `${storage}GB × $${(RATES.sqlStoragePerGB*730).toFixed(3)}/GB/mo`, cost: hours * storage * RATES.sqlStoragePerGB },
     { name: 'Fabric F2 (2 CUs)', region: 'indonesiacentral', rate: `$${RATES.fabricF2}/hr × ${fabricOn ? 'ON':'OFF'}`, cost: fabricOn ? hours * RATES.fabricF2 : 0 },
     { name: 'GPT-5 Input', region: 'eastus2', rate: `${chats}×${inTokens}tok × $${RATES.gpt5In}/1K`, cost: chats * inTokens / 1000 * RATES.gpt5In },
