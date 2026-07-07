@@ -144,8 +144,8 @@ fi
 # ----- lab VM choice (interactive unless --with-vm/--no-vm/--yes given) -----
 if [[ -z "$DEPLOY_VM" ]]; then
   if [[ "$AUTO_YES" == "1" ]]; then
-    DEPLOY_VM=0
-    warn "No --with-vm/--no-vm given with --yes; defaulting to NO lab VM."
+    DEPLOY_VM=1
+    log "No --with-vm/--no-vm given with --yes; defaulting to YES (lab includes VM)."
   elif confirm "Include a Windows lab VM (RDP jumpbox; also bootstraps SQL if port 1433 is blocked locally)?"; then
     DEPLOY_VM=1
   else
@@ -325,6 +325,16 @@ if [[ "$DEPLOY_VM" == "1" ]]; then
     --tags project=lab513 instance="$LAB_INSTANCE_ID" purpose=lab-vm
   if az vm show -g "$VM_RG" -n "$VM_NAME" -o none 2>/dev/null; then
     ok "Lab VM ${VM_NAME} already exists (reusing)."
+    # Ensure .vm-cred is written even when reusing an existing VM
+    if [[ ! -f "${ROOT_DIR}/.vm-cred" ]]; then
+      VM_IP=$(az vm show -d -g "$VM_RG" -n "$VM_NAME" --query publicIps -o tsv 2>/dev/null || echo "")
+      VM_FQDN=$(az network public-ip list -g "$VM_RG" --query "[0].dnsSettings.fqdn" -o tsv 2>/dev/null || echo "")
+      umask 077
+      printf 'VM=%s RG=%s LOC=%s USER=%s PASSWORD=%s IP=%s FQDN=%s\n' \
+        "$VM_NAME" "$VM_RG" "$LOCATION" "$VM_USER" "(from previous run)" "$VM_IP" "$VM_FQDN" > "${ROOT_DIR}/.vm-cred"
+      chmod 600 "${ROOT_DIR}/.vm-cred"
+      warn ".vm-cred regenerated (password unknown - from previous deploy). Reset via Azure Portal if needed."
+    fi
   else
     VM_PWD="$(gen_password)"
     # Random DNS suffix via openssl (no pipe -> avoids SIGPIPE under set -o pipefail).
