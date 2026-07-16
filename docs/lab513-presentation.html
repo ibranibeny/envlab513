@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAB513 — Azure SQL Hyperscale + Fabric + Foundry</title>
+<style>
+:root {
+  --azure: #0078D4;
+  --azure-dark: #243A5E;
+  --azure-light: #C7E0F4;
+  --green: #107C10;
+  --orange: #D83B01;
+  --purple: #5C2D91;
+  --bg: #F3F6FB;
+  --text: #243A5E;
+  --muted: #605E5C;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #0b1220; overflow: hidden; }
+.deck { width: 100vw; height: 100vh; position: relative; }
+.slide {
+  position: absolute; inset: 0; display: none;
+  flex-direction: column; padding: 5vh 6vw;
+  background: var(--bg); color: var(--text);
+  animation: fade .4s ease;
+}
+.slide.active { display: flex; }
+@keyframes fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.slide h1 { color: var(--azure); font-size: 3vw; margin-bottom: 1vh; }
+.slide h2 { color: var(--azure-dark); font-size: 2.2vw; border-bottom: 4px solid var(--azure); padding-bottom: 1vh; margin-bottom: 3vh; }
+.slide p, .slide li { font-size: 1.55vw; line-height: 1.7; }
+.slide ul, .slide ol { margin-left: 2.2vw; }
+.slide li { margin-bottom: 1.2vh; }
+.slide strong { color: var(--azure); }
+code { background: #E8EEF7; color: var(--orange); padding: 2px 7px; border-radius: 5px; font-family: 'Consolas', monospace; font-size: 0.92em; }
+
+.lead {
+  background: linear-gradient(135deg, var(--azure) 0%, var(--azure-dark) 100%);
+  color: #fff; align-items: center; justify-content: center; text-align: center;
+}
+.lead h1 { color: #fff; font-size: 4.2vw; margin-bottom: 2vh; }
+.lead .sub { color: var(--azure-light); font-size: 2.1vw; margin-bottom: 3vh; font-weight: 600; }
+.lead .tag { font-size: 1.5vw; opacity: 0.9; }
+.lead .badge { margin-top: 4vh; font-size: 1.2vw; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8; }
+
+table { border-collapse: collapse; width: 100%; margin-top: 1vh; font-size: 1.4vw; }
+th { background: var(--azure); color: #fff; padding: 1.2vh 1.4vw; text-align: left; }
+td { padding: 1.1vh 1.4vw; border-bottom: 1px solid #dbe4f0; }
+tr:nth-child(even) td { background: #eaf1fb; }
+
+.pills { display: flex; gap: 1.2vw; flex-wrap: wrap; margin-top: 2vh; }
+.pill { padding: 1.4vh 1.6vw; border-radius: 12px; color: #fff; font-size: 1.3vw; font-weight: 600; box-shadow: 0 3px 10px rgba(0,0,0,0.12); }
+.pill.data { background: var(--green); }
+.pill.ai { background: var(--orange); }
+.pill.fab { background: var(--purple); }
+.pill.gov { background: var(--muted); }
+.pill.dev { background: var(--azure); }
+
+.flow { display: flex; align-items: center; justify-content: center; gap: 0.8vw; flex-wrap: wrap; margin-top: 3vh; }
+.node { background: #fff; border: 2px solid var(--azure); border-radius: 12px; padding: 1.6vh 1.4vw; text-align: center; font-size: 1.15vw; font-weight: 600; min-width: 9vw; box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+.node.data { border-color: var(--green); }
+.node.ai { border-color: var(--orange); }
+.node.fab { border-color: var(--purple); }
+.arrow { color: var(--azure); font-size: 1.8vw; font-weight: 700; }
+
+.status-ok { color: var(--green); font-weight: 700; }
+.status-int { color: #B7791F; font-weight: 700; }
+
+pre { background: #1e2a3a; color: #e6edf3; padding: 2vh 1.6vw; border-radius: 10px; font-size: 1.2vw; margin-top: 2vh; overflow: auto; }
+pre code { background: none; color: #7ee787; padding: 0; }
+
+.callout { margin-top: 3vh; padding: 1.8vh 1.6vw; background: #fff; border-left: 6px solid var(--orange); border-radius: 8px; font-size: 1.3vw; }
+
+.progress { position: fixed; bottom: 0; left: 0; height: 6px; background: var(--azure); transition: width .3s; z-index: 20; }
+.hud { position: fixed; bottom: 2.2vh; right: 2.4vw; font-size: 1vw; color: var(--muted); background: rgba(255,255,255,0.85); padding: 0.6vh 1vw; border-radius: 20px; z-index: 20; }
+.nav { position: fixed; bottom: 2.2vh; left: 2.4vw; display: flex; gap: 0.6vw; z-index: 20; }
+.nav button { border: none; background: var(--azure); color: #fff; width: 3vw; height: 3vw; border-radius: 50%; font-size: 1.4vw; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.nav button:hover { background: var(--azure-dark); }
+.footer-brand { position: fixed; top: 2.2vh; right: 2.4vw; font-size: 0.95vw; color: var(--muted); z-index: 20; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <section class="slide lead active">
+    <h1>LAB513</h1>
+    <div class="sub">Build an AI app with Azure SQL Hyperscale, Microsoft Fabric &amp; Microsoft Foundry</div>
+    <div class="tag">Retrieval-Augmented Generation (RAG) over enterprise FAQ data</div>
+    <div class="badge">Microsoft Build 2026</div>
+  </section>
+
+  <section class="slide">
+    <h2>Agenda</h2>
+    <ol>
+      <li>Session overview &amp; learning outcomes</li>
+      <li>Solution architecture</li>
+      <li>Technology stack</li>
+      <li>End-to-end RAG workflow</li>
+      <li>Lab exercises (00–05)</li>
+      <li>Security &amp; governance model</li>
+      <li>Cost profile &amp; deployment automation</li>
+      <li>Key takeaways &amp; next steps</li>
+    </ol>
+  </section>
+
+  <section class="slide">
+    <h2>Session Overview</h2>
+    <p>Build an <strong>AI-powered FAQ assistant</strong> that answers customer questions using enterprise data — grounded, governed, and analytics-ready.</p>
+    <div class="pills">
+      <span class="pill data">Azure SQL Hyperscale · vector search</span>
+      <span class="pill ai">Azure OpenAI · gpt-5 RAG</span>
+      <span class="pill dev">GitHub Copilot · T-SQL</span>
+      <span class="pill fab">Microsoft Fabric · OneLake</span>
+      <span class="pill gov">Microsoft Purview · governance</span>
+      <span class="pill ai">Foundry Agents + MCP</span>
+    </div>
+  </section>
+
+  <section class="slide">
+    <h2>Learning Outcomes</h2>
+    <ul>
+      <li>Build a <strong>RAG workflow</strong> over enterprise data using Azure SQL vector search + Azure OpenAI</li>
+      <li>Mirror operational data into <strong>Microsoft Fabric OneLake</strong> for analytics and downstream AI</li>
+      <li>Apply <strong>governance with Microsoft Purview</strong></li>
+      <li>Orchestrate the experience end-to-end with <strong>Microsoft Foundry Agents</strong></li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <h2>Solution Architecture</h2>
+    <div class="flow">
+      <div class="node dev">Developer<br/>VS Code + Copilot</div>
+      <span class="arrow">→</span>
+      <div class="node data">Azure SQL<br/>Hyperscale</div>
+      <span class="arrow">→</span>
+      <div class="node ai">gpt-5 + embeddings<br/>(Foundry)</div>
+    </div>
+    <div class="flow">
+      <div class="node data">SQL data</div>
+      <span class="arrow">→</span>
+      <div class="node fab">Fabric OneLake</div>
+      <span class="arrow">→</span>
+      <div class="node fab">Power BI<br/>(Direct Lake)</div>
+      <span class="arrow">·</span>
+      <div class="node ai">Foundry Agent<br/>→ MCP → SQL</div>
+    </div>
+    <div class="callout"><strong>Three zones:</strong> Data (indonesiacentral) · AI (eastus2) · Analytics (Fabric F2). Token-only auth throughout — see <code>architecture.drawio</code>.</div>
+  </section>
+
+  <section class="slide">
+    <h2>Technology Stack</h2>
+    <table>
+      <tr><th>Layer</th><th>Service</th><th>Role in the lab</th></tr>
+      <tr><td>Data</td><td><strong>Azure SQL Hyperscale</strong></td><td>Serverless Gen5 2-vCore, vector search</td></tr>
+      <tr><td>AI</td><td><strong>Azure OpenAI (Foundry)</strong></td><td>gpt-5 + text-embedding-3-small</td></tr>
+      <tr><td>Analytics</td><td><strong>Microsoft Fabric</strong></td><td>F2 capacity, OneLake mirroring, Power BI</td></tr>
+      <tr><td>Governance</td><td><strong>Microsoft Purview</strong></td><td>Data catalog &amp; lineage</td></tr>
+      <tr><td>Orchestration</td><td><strong>Foundry Agents + MCP</strong></td><td>Tool-calling agent over SQL</td></tr>
+      <tr><td>Productivity</td><td><strong>GitHub Copilot</strong></td><td>Accelerate T-SQL authoring</td></tr>
+    </table>
+  </section>
+
+  <section class="slide">
+    <h2>End-to-End RAG Workflow</h2>
+    <ol>
+      <li><strong>Ingest</strong> — seed FAQ content into <code>dbo.FAQ_Content</code></li>
+      <li><strong>Embed</strong> — <code>AI_GENERATE_EMBEDDINGS</code> → <code>dbo.FAQ_Embeddings</code> (Managed Identity)</li>
+      <li><strong>Retrieve</strong> — <code>dbo.SearchFAQ</code> ranks nearest vectors for a question</li>
+      <li><strong>Augment</strong> — build a grounded prompt from top FAQ matches</li>
+      <li><strong>Generate</strong> — call <code>gpt-5</code> for the final grounded answer</li>
+      <li><strong>Analyze</strong> — mirror to OneLake → Power BI trend report</li>
+      <li><strong>Orchestrate</strong> — Foundry Agent calls the MCP tool over a dev tunnel</li>
+    </ol>
+  </section>
+
+  <section class="slide">
+    <h2>Lab Exercises</h2>
+    <table>
+      <tr><th>#</th><th>Exercise</th><th>Status</th></tr>
+      <tr><td>00</td><td>Environment readiness check</td><td class="status-ok">✅ Verified</td></tr>
+      <tr><td>01</td><td>Schema + embeddings + SearchFAQ</td><td class="status-ok">✅ Verified</td></tr>
+      <tr><td>02</td><td>Copilot semantic-search query</td><td class="status-ok">✅ Verified</td></tr>
+      <tr><td>03</td><td>RAG grounded prompt → gpt-5</td><td class="status-ok">✅ Verified</td></tr>
+      <tr><td>04</td><td>Foundry agent + local MCP server</td><td class="status-ok">✅ Verified</td></tr>
+      <tr><td>05</td><td>Microsoft Fabric (OneLake + Power BI)</td><td class="status-int">🟡 Interactive</td></tr>
+    </table>
+  </section>
+
+  <section class="slide">
+    <h2>Security &amp; Governance</h2>
+    <ul>
+      <li><strong>Token-only authentication</strong> — AI account has <code>disableLocalAuth=true</code></li>
+      <li><strong>Managed Identity</strong> — SQL → Azure OpenAI, no keys</li>
+      <li><strong>Secrets never committed</strong> — <code>.env</code>, <code>.vm-cred</code> gitignored</li>
+      <li><strong>Microsoft Purview</strong> — catalog &amp; lineage across SQL and Fabric</li>
+      <li><strong>Least-privilege RBAC</strong> — scoped role assignments per resource</li>
+    </ul>
+    <div class="callout">Keyless by design — a key differentiator vs. the api-key lab flow.</div>
+  </section>
+
+  <section class="slide">
+    <h2>Cost Profile &amp; Deployment</h2>
+    <table>
+      <tr><th>Component</th><th>Region</th><th>Rate</th></tr>
+      <tr><td>VM D2s_v5 (incl. Windows license)</td><td>indonesiacentral</td><td>$0.200/hr</td></tr>
+      <tr><td>SQL Hyperscale Gen5 (HS_S_Gen5_2)</td><td>indonesiacentral</td><td>$0.6849/vCore/hr</td></tr>
+      <tr><td>Fabric F2 capacity</td><td>indonesiacentral</td><td>$0.38/hr</td></tr>
+      <tr><td>gpt-5 / embeddings</td><td>eastus2</td><td>per-token</td></tr>
+    </table>
+    <pre><code>./scripts/deploy.sh --instance &lt;ID&gt; --ai-location eastus2
+./scripts/teardown.sh   # when finished — controls cost</code></pre>
+  </section>
+
+  <section class="slide">
+    <h2>Key Takeaways</h2>
+    <ul>
+      <li><strong>Grounded AI</strong> — RAG over SQL vector search reduces hallucinations</li>
+      <li><strong>Keyless by design</strong> — Managed Identity + token auth end-to-end</li>
+      <li><strong>Unified analytics</strong> — Fabric OneLake mirroring, no ETL</li>
+      <li><strong>Agentic</strong> — Foundry Agents + MCP turn SQL into a callable tool</li>
+      <li><strong>Copilot-accelerated</strong> — write T-SQL faster with grounded prompts</li>
+    </ul>
+  </section>
+
+  <section class="slide lead">
+    <h1>Next Steps</h1>
+    <div class="sub">aka.ms/build26-next-steps</div>
+    <div class="tag">Connect the Microsoft Learn MCP Server in VS Code<br/>for the latest official documentation</div>
+    <div class="badge">Thank you!</div>
+  </section>
+
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="footer-brand">Microsoft Build 2026 · LAB513</div>
+<div class="hud"><span id="cur">1</span> / <span id="total">1</span></div>
+<div class="nav">
+  <button onclick="go(-1)" aria-label="Previous">‹</button>
+  <button onclick="go(1)" aria-label="Next">›</button>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+let idx = 0;
+document.getElementById('total').textContent = slides.length;
+function render() {
+  slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+  document.getElementById('cur').textContent = idx + 1;
+  document.getElementById('progress').style.width = ((idx + 1) / slides.length * 100) + '%';
+}
+function go(d) { idx = Math.max(0, Math.min(slides.length - 1, idx + d)); render(); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { go(1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(-1); e.preventDefault(); }
+  if (e.key === 'Home') { idx = 0; render(); }
+  if (e.key === 'End') { idx = slides.length - 1; render(); }
+});
+document.getElementById('deck').addEventListener('click', e => { if (!e.target.closest('.nav')) go(1); });
+render();
+</script>
+</body>
+</html>
