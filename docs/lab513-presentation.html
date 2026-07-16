@@ -98,7 +98,8 @@ pre code { background: none; color: #7ee787; padding: 0; }
       <li>Solution architecture</li>
       <li>Technology stack</li>
       <li>End-to-end RAG workflow</li>
-      <li>Lab exercises (00–05)</li>
+      <li>Lab exercises (00–05) — what we build</li>
+      <li>Workshop schedule (09:00–12:00)</li>
       <li>Security &amp; governance model</li>
       <li>Cost profile &amp; deployment automation</li>
       <li>Key takeaways &amp; next steps</li>
@@ -130,23 +131,65 @@ pre code { background: none; color: #7ee787; padding: 0; }
 
   <section class="slide">
     <h2>Solution Architecture</h2>
-    <div class="flow">
-      <div class="node dev">Developer<br/>VS Code + Copilot</div>
-      <span class="arrow">→</span>
-      <div class="node data">Azure SQL<br/>Hyperscale</div>
-      <span class="arrow">→</span>
-      <div class="node ai">gpt-5 + embeddings<br/>(Foundry)</div>
+    <div style="width:100%;text-align:center">
+    <svg viewBox="0 0 1480 780" style="width:100%;max-height:74vh" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+      <defs>
+        <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#334"/></marker>
+      </defs>
+      <!-- zones -->
+      <rect x="20" y="70" width="200" height="250" rx="10" fill="#E6F0FA" stroke="#0078D4" stroke-width="2"/>
+      <text x="120" y="95" text-anchor="middle" font-size="15" font-weight="700" fill="#0F3E6E">Developer Environment</text>
+      <rect x="300" y="60" width="520" height="500" rx="10" fill="#F0F9F0" stroke="#107C10" stroke-width="3"/>
+      <text x="560" y="86" text-anchor="middle" font-size="15" font-weight="700" fill="#0B520B">Resource Group — indonesiacentral</text>
+      <rect x="330" y="340" width="460" height="190" rx="8" fill="none" stroke="#107C10" stroke-width="2" stroke-dasharray="8 8"/>
+      <text x="560" y="365" text-anchor="middle" font-size="12" fill="#0B520B">VNet / Subnet / NSG (all traffic open — lab only)</text>
+      <rect x="880" y="60" width="580" height="300" rx="10" fill="#FDF3EC" stroke="#D83B01" stroke-width="2"/>
+      <text x="1170" y="86" text-anchor="middle" font-size="15" font-weight="700" fill="#8A2600">Azure AI — eastus2 (token-only, disableLocalAuth=true)</text>
+      <rect x="880" y="400" width="580" height="220" rx="10" fill="#F3EEF9" stroke="#5C2D91" stroke-width="2"/>
+      <text x="1170" y="426" text-anchor="middle" font-size="15" font-weight="700" fill="#3B1D5E">Microsoft Fabric (F2) — indonesiacentral</text>
+      <rect x="300" y="600" width="520" height="150" rx="10" fill="#F3F3F3" stroke="#605E5C" stroke-width="2"/>
+      <text x="560" y="626" text-anchor="middle" font-size="15" font-weight="700" fill="#323130">Governance &amp; Agent Orchestration</text>
+      <!-- nodes -->
+      <g font-size="12" text-anchor="middle" fill="#1a1a2e">
+        <rect x="60" y="140" width="120" height="90" rx="8" fill="#fff" stroke="#0078D4"/><text x="120" y="175" font-weight="700">Audience</text><text x="120" y="195">Developer</text><text x="120" y="212">(RDP)</text>
+        <rect x="315" y="115" width="90" height="46" rx="8" fill="#fff" stroke="#107C10"/><text x="360" y="143" font-size="11">Managed Id.</text>
+        <rect x="420" y="140" width="130" height="90" rx="8" fill="#fff" stroke="#107C10"/><text x="485" y="172" font-weight="700">Lab VM</text><text x="485" y="190" font-size="11">VS Code + Copilot</text><text x="485" y="206" font-size="11">CLI + DevTunnel</text>
+        <rect x="610" y="135" width="170" height="100" rx="8" fill="#fff" stroke="#107C10"/><text x="695" y="163" font-weight="700">Azure SQL Hyperscale</text><text x="695" y="181" font-size="10.5">Serverless Gen5 2-vCore</text><text x="695" y="197" font-size="10">FAQ_Content · Embeddings</text><text x="695" y="212" font-size="10">dbo.SearchFAQ</text>
+        <rect x="360" y="400" width="150" height="60" rx="8" fill="#fff" stroke="#107C10"/><text x="435" y="435" font-size="11">Virtual Network</text>
+        <rect x="600" y="400" width="160" height="60" rx="8" fill="#fff" stroke="#107C10"/><text x="680" y="435" font-size="11">Network Security Grp</text>
+        <rect x="905" y="130" width="120" height="70" rx="8" fill="#fff" stroke="#D83B01"/><text x="965" y="160" font-weight="700" font-size="11">AI Foundry</text><text x="965" y="177" font-size="10">AIServices</text>
+        <rect x="1075" y="120" width="120" height="60" rx="8" fill="#fff" stroke="#D83B01"/><text x="1135" y="155" font-weight="700" font-size="11">gpt-5 (chat)</text>
+        <rect x="1250" y="120" width="180" height="60" rx="8" fill="#fff" stroke="#D83B01"/><text x="1340" y="147" font-size="11">text-embedding-</text><text x="1340" y="163" font-size="11">3-small</text>
+        <rect x="1050" y="270" width="180" height="56" rx="8" fill="#fff" stroke="#D83B01"/><text x="1140" y="303" font-size="11">FAQ-Assistant-project</text>
+        <rect x="905" y="470" width="130" height="66" rx="8" fill="#fff" stroke="#5C2D91"/><text x="970" y="500" font-size="11" font-weight="700">Fabric Capacity</text><text x="970" y="517" font-size="10">F2 (2 CU)</text>
+        <rect x="1075" y="470" width="150" height="66" rx="8" fill="#fff" stroke="#5C2D91"/><text x="1150" y="498" font-size="11" font-weight="700">OneLake</text><text x="1150" y="515" font-size="10">Mirrored DB → Delta</text>
+        <rect x="1270" y="470" width="160" height="66" rx="8" fill="#fff" stroke="#5C2D91"/><text x="1350" y="498" font-size="11" font-weight="700">Power BI</text><text x="1350" y="515" font-size="10">Direct Lake</text>
+        <rect x="470" y="655" width="180" height="66" rx="8" fill="#fff" stroke="#605E5C"/><text x="560" y="683" font-size="11" font-weight="700">Foundry Agent + MCP</text><text x="560" y="700" font-size="10">devtunnel → DAB → SQL</text>
+      </g>
+      <!-- arrows -->
+      <g stroke="#334" stroke-width="1.6" fill="none" marker-end="url(#ah)">
+        <line x1="180" y1="185" x2="418" y2="185"/>
+        <line x1="360" y1="161" x2="360" y2="180"/><line x1="360" y1="180" x2="608" y2="185"/>
+        <line x1="780" y1="175" x2="1073" y2="150"/>
+        <line x1="780" y1="200" x2="1248" y2="150"/>
+        <line x1="782" y1="215" x2="1073" y2="480"/>
+        <line x1="1225" y1="503" x2="1268" y2="503"/>
+        <line x1="560" y1="655" x2="610" y2="237"/>
+        <line x1="1140" y1="326" x2="640" y2="360" stroke-dasharray="4 4"/>
+      </g>
+      <g font-size="11" fill="#334" font-weight="600">
+        <text x="300" y="178">Remote/RDP</text>
+        <text x="470" y="150">1 · T-SQL (Copilot)</text>
+        <text x="905" y="120">3 · RAG prompt</text>
+        <text x="905" y="235">2 · Embeddings (MI)</text>
+        <text x="800" y="360">4 · Mirroring</text>
+        <text x="1228" y="493">5 · Direct Lake</text>
+        <text x="575" y="450">6-7 · MCP → DAB</text>
+        <text x="835" y="345" fill="#8A2600">agent uses</text>
+      </g>
+    </svg>
     </div>
-    <div class="flow">
-      <div class="node data">SQL data</div>
-      <span class="arrow">→</span>
-      <div class="node fab">Fabric OneLake</div>
-      <span class="arrow">→</span>
-      <div class="node fab">Power BI<br/>(Direct Lake)</div>
-      <span class="arrow">·</span>
-      <div class="node ai">Foundry Agent<br/>→ MCP → SQL</div>
-    </div>
-    <div class="callout"><strong>Three zones:</strong> Data (indonesiacentral) · AI (eastus2) · Analytics (Fabric F2). Token-only auth throughout — see <code>architecture.drawio</code>.</div>
+    <div class="callout" style="margin-top:1vh"><strong>Three zones:</strong> Data (indonesiacentral) · AI (eastus2) · Analytics (Fabric F2). Token-only auth throughout.</div>
   </section>
 
   <section class="slide">
@@ -176,16 +219,33 @@ pre code { background: none; color: #7ee787; padding: 0; }
   </section>
 
   <section class="slide">
-    <h2>Lab Exercises</h2>
-    <table>
-      <tr><th>#</th><th>Exercise</th><th>Status</th></tr>
-      <tr><td>00</td><td>Environment readiness check</td><td class="status-ok">✅ Verified</td></tr>
-      <tr><td>01</td><td>Schema + embeddings + SearchFAQ</td><td class="status-ok">✅ Verified</td></tr>
-      <tr><td>02</td><td>Copilot semantic-search query</td><td class="status-ok">✅ Verified</td></tr>
-      <tr><td>03</td><td>RAG grounded prompt → gpt-5</td><td class="status-ok">✅ Verified</td></tr>
-      <tr><td>04</td><td>Foundry agent + local MCP server</td><td class="status-ok">✅ Verified</td></tr>
-      <tr><td>05</td><td>Microsoft Fabric (OneLake + Power BI)</td><td class="status-int">🟡 Interactive</td></tr>
+    <h2>Lab Exercises — What We Build</h2>
+    <table style="font-size:1.25vw">
+      <tr><th>#</th><th>Exercise</th><th>What you do</th></tr>
+      <tr><td><strong>00</strong></td><td>Readiness check</td><td>Verify VS Code, extensions, Python, devtunnel, and that SQL Hyperscale + FAQ tables are ready.</td></tr>
+      <tr><td><strong>01</strong></td><td>Schema + embeddings</td><td>Create the FAQ schema, seed content, generate vector embeddings, and build <code>dbo.SearchFAQ</code>.</td></tr>
+      <tr><td><strong>02</strong></td><td>Copilot semantic search</td><td>Use GitHub Copilot to write T-SQL comparing keyword vs semantic (vector) search.</td></tr>
+      <tr><td><strong>03</strong></td><td>RAG → gpt-5</td><td>Build a grounded prompt from top FAQ matches and call <code>gpt-5</code> for the final answer.</td></tr>
+      <tr><td><strong>04</strong></td><td>Foundry agent + MCP</td><td>Expose SQL via an MCP server over a dev tunnel; orchestrate retrieval with a Foundry Agent.</td></tr>
+      <tr><td><strong>05</strong></td><td>Microsoft Fabric</td><td>Mirror SQL data to OneLake and build a Power BI report over Direct Lake.</td></tr>
     </table>
+  </section>
+
+  <section class="slide">
+    <h2>Workshop Schedule (3 hours)</h2>
+    <table style="font-size:1.35vw">
+      <tr><th>Time</th><th>Activity</th><th>Duration</th></tr>
+      <tr><td>08:30 – 09:00</td><td>Registration &amp; environment setup</td><td>30 min</td></tr>
+      <tr><td>09:00 – 09:15</td><td>Welcome, overview &amp; architecture</td><td>15 min</td></tr>
+      <tr><td>09:15 – 09:30</td><td><strong>Exercise 00</strong> — Readiness check</td><td>15 min</td></tr>
+      <tr><td>09:30 – 10:00</td><td><strong>Exercise 01</strong> — Schema + embeddings</td><td>30 min</td></tr>
+      <tr><td>10:00 – 10:25</td><td><strong>Exercise 02</strong> — Copilot semantic search</td><td>25 min</td></tr>
+      <tr><td style="color:#D83B01;font-weight:700">10:25 – 10:40</td><td style="color:#D83B01;font-weight:700">☕ Break</td><td>15 min</td></tr>
+      <tr><td>10:40 – 11:10</td><td><strong>Exercise 03</strong> — RAG → gpt-5</td><td>30 min</td></tr>
+      <tr><td>11:10 – 11:40</td><td><strong>Exercise 04</strong> — Foundry agent + MCP</td><td>30 min</td></tr>
+      <tr><td>11:40 – 12:00</td><td><strong>Exercise 05</strong> — Fabric + wrap-up</td><td>20 min</td></tr>
+    </table>
+    <div class="callout" style="margin-top:1vh">Workshop runs <strong>09:00 – 12:00</strong> · registration from 08:30 · one 15-min break at 10:25.</div>
   </section>
 
   <section class="slide">
