@@ -80,14 +80,14 @@ flowchart LR
 
 | # | Exercise | Time | Status |
 |---|----------|------|--------|
-| 00 | Environment readiness check | ~5 min | ✅ |
-| 01 | Schema + embeddings + `SearchFAQ` | ~10 min | ✅ |
-| 02 | Copilot semantic search | ~10 min | ✅ |
-| 03 | RAG grounded prompt → `gpt-5` | ~10 min | ✅ |
-| 04 | Foundry agent + local MCP server | ~15 min | ✅ |
-| 05 | Microsoft Fabric (OneLake + Power BI) | ~15 min | 🟡 Interactive |
+| 00 | Environment readiness check | ~15 min | ✅ |
+| 01 | Schema + embeddings + `SearchFAQ` | ~30 min | ✅ |
+| 02 | Copilot semantic search | ~25 min | ✅ |
+| 03 | RAG grounded prompt → `gpt-5` | ~30 min | ✅ |
+| 04 | Foundry agent + local MCP server | ~40 min | ✅ |
+| 05 | Microsoft Fabric (OneLake + Power BI) | ~40 min | 🟡 Interactive |
 
-**Total ≈ 65 minutes** · **Keyless by design:** `disableLocalAuth=true` — SQL → Azure OpenAI via **Managed Identity**, no keys stored.
+**Total ≈ 3 hours** · **Keyless by design:** `disableLocalAuth=true` — SQL → Azure OpenAI via **Managed Identity**, no keys stored.
 
 ---
 
