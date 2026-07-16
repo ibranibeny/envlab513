@@ -47,6 +47,16 @@ tr:nth-child(even) td { background: #eaf1fb; }
 .arch-wrap img { max-width: 100%; max-height: 80vh; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); background: #fff; }
 .break-row td { color: var(--orange); font-weight: 700; }
 .callout { margin-top: 1.5vh; padding: 1.4vh 1.4vw; background: #fff; border-left: 6px solid var(--orange); border-radius: 8px; font-size: 1.2vw; }
+.pillar-tag { text-align: center; font-size: 1.15vw; color: #fff; opacity: 0.92; margin: 2.5vh 0 0.8vh; font-weight: 600; }
+.pillars4 { display: flex; gap: 1.2vw; margin-bottom: 1vh; }
+.pillar4 { flex: 1; border-radius: 12px; padding: 1.4vh 1vw; text-align: center; color: #fff; font-weight: 700; font-size: 1.15vw; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+.pillar4 small { display: block; font-weight: 400; font-size: 0.82vw; opacity: 0.92; margin-top: 0.4vh; }
+.p-db { background: var(--green); }
+.p-gh { background: #1f6feb; }
+.p-fo { background: var(--orange); }
+.p-fa { background: var(--purple); }
+.hl-gh td { background: #E7F0FF !important; }
+.hl-gh td:first-child, .hl-gh td:nth-child(2) { color: #1f6feb; font-weight: 700; }
 .progress { position: fixed; bottom: 0; left: 0; height: 6px; background: var(--azure); transition: width .3s; z-index: 20; }
 .hud { position: fixed; bottom: 2vh; right: 2.2vw; font-size: 1vw; color: var(--muted); background: rgba(255,255,255,0.85); padding: 0.5vh 1vw; border-radius: 20px; z-index: 20; }
 .nav { position: fixed; bottom: 2vh; left: 2.2vw; display: flex; gap: 0.6vw; z-index: 20; }
@@ -62,21 +72,28 @@ tr:nth-child(even) td { background: #eaf1fb; }
     <h1>LAB513</h1>
     <div class="sub">Build an AI App with Azure SQL Hyperscale, Microsoft Fabric &amp; Microsoft Foundry</div>
     <div class="tag">Retrieval-Augmented Generation (RAG) over enterprise FAQ data — Microsoft Build 2026</div>
-    <div class="two-col" style="margin-top:3vh">
+    <div class="pillar-tag">Four building blocks to build AI apps:</div>
+    <div class="pillars4">
+      <div class="pillar4 p-db">Azure SQL Database<small>Hyperscale · vectors + grounding</small></div>
+      <div class="pillar4 p-gh">GitHub Copilot<small>write, explain &amp; improve T-SQL</small></div>
+      <div class="pillar4 p-fo">Microsoft Foundry<small>gpt-5 · Agents + MCP</small></div>
+      <div class="pillar4 p-fa">Microsoft Fabric<small>OneLake mirroring · Power BI</small></div>
+    </div>
+    <div class="two-col">
       <div class="col agenda-box">
         <h3>Agenda</h3>
         <ol>
-          <li><strong>Solution architecture</strong> — the end-to-end design</li>
-          <li><strong>Lab exercises (00–05)</strong> — what we build</li>
+          <li><strong>Solution architecture</strong> — Database + GitHub + Foundry + Fabric</li>
+          <li><strong>Lab exercises (00–06)</strong> — what we build, incl. GitHub Copilot for SQL</li>
           <li><strong>Workshop schedule</strong> — 09:00–12:00 timetable</li>
         </ol>
       </div>
       <div class="col agenda-box">
         <h3>You will learn to</h3>
         <ul>
-          <li>Build a <strong>RAG workflow</strong> with Azure SQL vector search + Azure OpenAI</li>
-          <li>Mirror data into <strong>Fabric OneLake</strong> for analytics</li>
-          <li>Orchestrate with <strong>Foundry Agents + MCP</strong></li>
+          <li>Ground AI on <strong>Azure SQL</strong> vector search (no hallucinations)</li>
+          <li>Accelerate T-SQL with <strong>GitHub Copilot</strong></li>
+          <li>Orchestrate with <strong>Foundry Agents + MCP</strong> &amp; analyze in <strong>Fabric</strong></li>
         </ul>
       </div>
     </div>
@@ -91,12 +108,13 @@ tr:nth-child(even) td { background: #eaf1fb; }
     <h2>Lab Exercises — What We Build</h2>
     <table>
       <tr><th>#</th><th>Exercise</th><th>What you do</th></tr>
-      <tr><td><strong>00</strong></td><td>Readiness check</td><td>Verify VS Code, extensions, Python, devtunnel, and that SQL Hyperscale + FAQ tables are ready.</td></tr>
-      <tr><td><strong>01</strong></td><td>Schema + embeddings</td><td>Create the FAQ schema, seed content, generate vector embeddings, and build <code>dbo.SearchFAQ</code>.</td></tr>
-      <tr><td><strong>02</strong></td><td>Copilot semantic search</td><td>Use GitHub Copilot to write T-SQL comparing keyword vs semantic (vector) search.</td></tr>
-      <tr><td><strong>03</strong></td><td>RAG → gpt-5</td><td>Build a grounded prompt from top FAQ matches and call <code>gpt-5</code> for the final answer.</td></tr>
-      <tr><td><strong>04</strong></td><td>Foundry agent + MCP</td><td>Expose SQL via an MCP server over a dev tunnel; orchestrate retrieval with a Foundry Agent.</td></tr>
-      <tr><td><strong>05</strong></td><td>Microsoft Fabric</td><td>Mirror SQL data to OneLake and build a Power BI report over Direct Lake.</td></tr>
+      <tr><td><strong>00</strong></td><td>Prerequisites</td><td>Set up tools, clone the repo, and provision Azure SQL Hyperscale.</td></tr>
+      <tr><td><strong>01</strong></td><td>Semantic Search</td><td>Connect to SQL, explore FAQ data, and run <strong>vector search</strong> — see why it beats keyword search.</td></tr>
+      <tr class="hl-gh"><td><strong>02</strong></td><td>GitHub Copilot for SQL</td><td>Use <strong>GitHub Copilot</strong> to generate, explain, and improve T-SQL — AI-accelerated, you stay in control.</td></tr>
+      <tr><td><strong>03</strong></td><td>RAG Workflow</td><td>Retrieve FAQ context, build a grounded prompt, and call <code>gpt-5</code> — grounding prevents hallucinations.</td></tr>
+      <tr><td><strong>04</strong></td><td>Foundry Agents + MCP</td><td>Expose retrieval as an MCP tool; a <strong>Foundry Agent</strong> decides when to call it — autonomous orchestration.</td></tr>
+      <tr><td><strong>05</strong></td><td>Fabric Mirroring</td><td>Mirror FAQ data into <strong>OneLake</strong> and build a Power BI report — analytics with no ETL.</td></tr>
+      <tr><td><strong>06</strong></td><td>SQL MCP via DAB</td><td>Expose Azure SQL through Data API Builder as an MCP server — a standard interface, zero custom code.</td></tr>
     </table>
   </section>
 
@@ -106,15 +124,16 @@ tr:nth-child(even) td { background: #eaf1fb; }
       <tr><th>Time</th><th>Activity</th><th>Duration</th></tr>
       <tr><td>08:30 – 09:00</td><td>Registration &amp; environment setup</td><td>30 min</td></tr>
       <tr><td>09:00 – 09:15</td><td>Welcome, overview &amp; architecture</td><td>15 min</td></tr>
-      <tr><td>09:15 – 09:30</td><td><strong>Exercise 00</strong> — Readiness check</td><td>15 min</td></tr>
-      <tr><td>09:30 – 10:00</td><td><strong>Exercise 01</strong> — Schema + embeddings</td><td>30 min</td></tr>
-      <tr><td>10:00 – 10:25</td><td><strong>Exercise 02</strong> — Copilot semantic search</td><td>25 min</td></tr>
-      <tr class="break-row"><td>10:25 – 10:40</td><td>☕ Break</td><td>15 min</td></tr>
-      <tr><td>10:40 – 11:10</td><td><strong>Exercise 03</strong> — RAG → gpt-5</td><td>30 min</td></tr>
-      <tr><td>11:10 – 11:40</td><td><strong>Exercise 04</strong> — Foundry agent + MCP</td><td>30 min</td></tr>
-      <tr><td>11:40 – 12:00</td><td><strong>Exercise 05</strong> — Fabric + wrap-up</td><td>20 min</td></tr>
+      <tr><td>09:15 – 09:30</td><td><strong>Ex 00</strong> — Prerequisites</td><td>15 min</td></tr>
+      <tr><td>09:30 – 09:55</td><td><strong>Ex 01</strong> — Semantic Search</td><td>25 min</td></tr>
+      <tr class="hl-gh"><td>09:55 – 10:20</td><td><strong>Ex 02</strong> — GitHub Copilot for SQL</td><td>25 min</td></tr>
+      <tr class="break-row"><td>10:20 – 10:35</td><td>☕ Break</td><td>15 min</td></tr>
+      <tr><td>10:35 – 11:00</td><td><strong>Ex 03</strong> — RAG Workflow</td><td>25 min</td></tr>
+      <tr><td>11:00 – 11:25</td><td><strong>Ex 04</strong> — Foundry Agents + MCP</td><td>25 min</td></tr>
+      <tr><td>11:25 – 11:45</td><td><strong>Ex 05</strong> — Fabric Mirroring</td><td>20 min</td></tr>
+      <tr><td>11:45 – 12:00</td><td><strong>Ex 06</strong> — SQL MCP via DAB + wrap-up</td><td>15 min</td></tr>
     </table>
-    <div class="callout">Registration from <strong>08:30</strong> · workshop <strong>09:00–12:00</strong> (3 hours) · one 15-min break at 10:25.</div>
+    <div class="callout">Registration from <strong>08:30</strong> · workshop <strong>09:00–12:00</strong> (3 hours) · one 15-min break at 10:20.</div>
   </section>
 
 </div>
