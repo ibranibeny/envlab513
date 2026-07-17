@@ -57,6 +57,8 @@ tr:nth-child(even) td { background: #eaf1fb; }
 .p-fa { background: var(--purple); }
 .hl-gh td { background: #E7F0FF !important; }
 .hl-gh td:first-child, .hl-gh td:nth-child(2) { color: #1f6feb; font-weight: 700; }
+.slide table.compact th { font-size: 1vw; padding: 0.6vh 1vw; }
+.slide table.compact td { font-size: 0.92vw; padding: 0.45vh 1vw; }
 .progress { position: fixed; bottom: 0; left: 0; height: 6px; background: var(--azure); transition: width .3s; z-index: 20; }
 .hud { position: fixed; bottom: 2vh; right: 2.2vw; font-size: 1vw; color: var(--muted); background: rgba(255,255,255,0.85); padding: 0.5vh 1vw; border-radius: 20px; z-index: 20; }
 .nav { position: fixed; bottom: 2vh; left: 2.2vw; display: flex; gap: 0.6vw; z-index: 20; }
@@ -106,7 +108,7 @@ tr:nth-child(even) td { background: #eaf1fb; }
 
   <section class="slide">
     <h2>Lab Exercises — What We Build</h2>
-    <table>
+    <table class="compact">
       <tr><th>#</th><th>Exercise</th><th>What you do</th></tr>
       <tr><td><strong>00</strong></td><td>Prerequisites</td><td>Set up tools, clone the repo, and provision Azure SQL Hyperscale.</td></tr>
       <tr><td><strong>01</strong></td><td>Semantic Search</td><td>Connect to SQL, explore FAQ data, and run <strong>vector search</strong> — see why it beats keyword search.</td></tr>
@@ -116,13 +118,8 @@ tr:nth-child(even) td { background: #eaf1fb; }
       <tr><td><strong>05</strong></td><td>Fabric Mirroring</td><td>Mirror FAQ data into <strong>OneLake</strong> and build a Power BI report — analytics with no ETL.</td></tr>
       <tr><td><strong>06</strong></td><td>SQL MCP via DAB</td><td>Expose Azure SQL through Data API Builder as an MCP server — a standard interface, zero custom code.</td></tr>
     </table>
-  </section>
-
-  <section class="slide">
-    <h2>How the Labs Build on Each Other</h2>
-    <p style="font-size:1.25vw;margin-bottom:1vh">Each lab builds on the last, and they all share the same database objects.</p>
-    <div style="width:100%;text-align:center">
-    <svg viewBox="0 0 1360 380" style="width:100%;max-height:66vh" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+    <div style="width:100%;text-align:center;margin-top:0.6vh">
+    <svg viewBox="0 0 1360 380" style="width:100%;max-height:33vh" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
       <defs>
         <marker id="oah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8 z" fill="#D83B01"/></marker>
       </defs>
