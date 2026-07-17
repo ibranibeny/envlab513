@@ -119,6 +119,49 @@ tr:nth-child(even) td { background: #eaf1fb; }
   </section>
 
   <section class="slide">
+    <h2>How the Labs Build on Each Other</h2>
+    <p style="font-size:1.25vw;margin-bottom:1vh">Each lab builds on the last, and they all share the same database objects.</p>
+    <div style="width:100%;text-align:center">
+    <svg viewBox="0 0 1360 380" style="width:100%;max-height:66vh" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+      <defs>
+        <marker id="oah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8 z" fill="#D83B01"/></marker>
+      </defs>
+      <g>
+        <rect x="8" y="45" width="178" height="88" rx="8" fill="#fff" stroke="#8A8886" stroke-width="3"/>
+        <text x="24" y="72" font-size="13" font-weight="700" fill="#8A8886">LAB 00</text><text x="24" y="98" font-size="20" font-weight="700" fill="#201F1E">Readiness</text><text x="24" y="120" font-size="11" fill="#605E5C">verify env</text>
+        <rect x="198" y="45" width="178" height="88" rx="8" fill="#fff" stroke="#D83B01" stroke-width="3"/>
+        <text x="214" y="72" font-size="13" font-weight="700" fill="#D83B01">LAB 01</text><text x="214" y="98" font-size="20" font-weight="700" fill="#201F1E">Query</text><text x="214" y="120" font-size="11" fill="#605E5C">run SearchFAQ</text>
+        <rect x="388" y="45" width="178" height="88" rx="8" fill="#fff" stroke="#201F1E" stroke-width="3"/>
+        <text x="404" y="72" font-size="13" font-weight="700" fill="#201F1E">LAB 02</text><text x="404" y="98" font-size="20" font-weight="700" fill="#201F1E">Copilot</text><text x="404" y="120" font-size="11" fill="#605E5C">write the SQL</text>
+        <rect x="578" y="45" width="178" height="88" rx="8" fill="#fff" stroke="#0078D4" stroke-width="3"/>
+        <text x="594" y="72" font-size="13" font-weight="700" fill="#0078D4">LAB 03</text><text x="594" y="98" font-size="20" font-weight="700" fill="#201F1E">RAG</text><text x="594" y="120" font-size="11" fill="#605E5C">grounded answer</text>
+        <rect x="768" y="45" width="178" height="88" rx="8" fill="#fff" stroke="#107C10" stroke-width="3"/>
+        <text x="784" y="72" font-size="13" font-weight="700" fill="#107C10">LAB 04</text><text x="784" y="98" font-size="20" font-weight="700" fill="#201F1E">Agent</text><text x="784" y="120" font-size="11" fill="#605E5C">MCP + Foundry</text>
+        <rect x="958" y="45" width="178" height="88" rx="8" fill="#fff" stroke="#D83B01" stroke-width="3"/>
+        <text x="974" y="72" font-size="13" font-weight="700" fill="#D83B01">LAB 05</text><text x="974" y="98" font-size="20" font-weight="700" fill="#201F1E">Analytics</text><text x="974" y="120" font-size="11" fill="#605E5C">Fabric + BI</text>
+        <rect x="1148" y="45" width="178" height="88" rx="8" fill="#fff" stroke="#0078D4" stroke-width="3"/>
+        <text x="1164" y="72" font-size="13" font-weight="700" fill="#0078D4">LAB 06</text><text x="1164" y="98" font-size="20" font-weight="700" fill="#201F1E">DAB MCP</text><text x="1164" y="120" font-size="11" fill="#605E5C">no-code tool</text>
+      </g>
+      <text x="8" y="158" font-size="12" font-style="italic" fill="#605E5C">Each lab's output becomes the next lab's starting point</text>
+      <g stroke="#D83B01" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#oah)">
+        <line x1="287" y1="133" x2="287" y2="238"/>
+        <line x1="667" y1="133" x2="667" y2="238"/>
+        <line x1="857" y1="133" x2="857" y2="238"/>
+        <line x1="1237" y1="133" x2="1237" y2="238"/>
+      </g>
+      <rect x="8" y="245" width="1318" height="88" rx="10" fill="#FDEBD9" stroke="#D83B01" stroke-width="1.5"/>
+      <text x="28" y="272" font-size="12" font-weight="700" letter-spacing="1" fill="#8A5A2B">SHARED FOUNDATION</text>
+      <text x="28" y="303" font-size="18" font-weight="700" fill="#201F1E">Azure SQL Hyperscale <tspan fill="#605E5C">—</tspan> <tspan fill="#D83B01">FAQ_Content</tspan> <tspan fill="#605E5C" font-weight="400" font-size="15">(Q&amp;A)</tspan> · <tspan fill="#D83B01">FAQ_Embeddings</tspan> <tspan fill="#605E5C" font-weight="400" font-size="15">VECTOR(1536)</tspan> · <tspan fill="#D83B01">dbo.SearchFAQ</tspan> <tspan fill="#605E5C" font-weight="400" font-size="15">(the search)</tspan></text>
+      <text x="683" y="358" font-size="12" font-style="italic" fill="#605E5C" text-anchor="middle">Labs 01, 03, 04 and 06 all call the same dbo.SearchFAQ — written once, reused four times</text>
+      <g font-size="11" fill="#605E5C">
+        <rect x="8" y="368" width="14" height="10" fill="#D83B01"/><text x="28" y="377">uses dbo.SearchFAQ</text>
+        <rect x="170" y="368" width="14" height="10" fill="#8A8886"/><text x="190" y="377">sequential flow</text>
+      </g>
+    </svg>
+    </div>
+  </section>
+
+  <section class="slide">
     <h2>Workshop Schedule (09:00 – 16:00)</h2>
     <table>
       <tr><th>Time</th><th>Activity</th><th>Duration</th></tr>
